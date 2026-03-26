@@ -1,6 +1,6 @@
 # profile-title: 🏳️ Gh0st_VPN | Белые списки
 # profile-update-interval: 3
-# Date/Time: 2026-03-26 / 19:08 (Moscow)
+# Date/Time: 2026-03-26 / 19:21 (Moscow)
 # Количество: 1228
 # Источники: igareck & zieng2
 
