@@ -1,0 +1,31 @@
+name: Update My Configs
+on:
+  schedule:
+    - cron: '0 */3 * * *' # Обновление каждые 3 часа
+  workflow_dispatch:      # Кнопка для ручного запуска
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download and Combine
+        run: |
+          # Скачиваем первую ссылку
+          curl -s "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" > list.txt
+          # Добавляем пустую строку для надежности
+          echo "" >> list.txt
+          # Добавляем вторую ссылку в тот же файл
+          curl -s "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" >> list.txt
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "action@github.com"
+          git add list.txt
+          git commit -m "Update configs from sources" || exit 0
+          git push
