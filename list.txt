@@ -1,9 +1,3 @@
-# profile-title: 🏳️ БЕЛЫЕ СПИСКИ 🏳️ WHITE LISTS | CIDR | Полная • Full
-# profile-update-interval: 5
-# Date/Time: 2026-03-26 / 12:41 (Moscow)
-# Количество: 214
-# For more info and VPN-configs - visit: www.github.com/igareck/vpn-configs-for-russia
-
 vless://7bbcc147-4352-4fed-bb2c-82ab60989575@amx1.braidpro.online:443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=UBbhoPkt0CChT3JcJ5uaCxzB7NudBOC15APdi1FDj2c&sid=c156db5f2b25c21d&sni=amx1.braidpro.online#%F0%9F%87%A6%F0%9F%87%B2%20Armenia%20%5B%2ACIDR%5D
 vless://a47fb050-8477-4d86-9332-5f687f572d94@194.156.103.213:1888?type=tcp&security=reality&flow=xtls-rprx-vision&fp=&pbk=GaVpyGU5Xqyd5SYmchrCIajjTiXF69bmCnUdftmrwTM&sid=6b&sni=www.kernel.org&path=&host=#%F0%9F%87%A6%F0%9F%87%B2%20Armenia%20%5B%2ACIDR%5D
 vless://753017a3-c43f-4529-a5f4-1162929a66a4@176.122.25.50:443?flow=xtls-rprx-vision&encryption=none&type=tcp&security=reality&fp=chrome&sni=img.yandex.ru&pbk=zwxb4S-XaRk54UpQmRoeA9VzK97kKLPaMEPVeQwG5zs&sid=91&spx=%2F#%F0%9F%87%A7%F0%9F%87%AA%20Belgium%20%7C%20%F0%9F%8C%90%20%5B%2ACIDR%5D
