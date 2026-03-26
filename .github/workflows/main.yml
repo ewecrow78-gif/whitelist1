@@ -15,17 +15,14 @@ jobs:
 
       - name: Download and Combine
         run: |
-          # 1. Скачиваем, удаляем первые 6 строк и все пустые строки
-          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | sed '/^$/d' > temp.txt
+          # 1. Скачиваем первую ссылку, пропускаем 6 строк и оставляем ТОЛЬКО строки с конфигами
+          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > list.txt
           
-          # 2. Добавляем вторую ссылку без пустых строк
-          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | sed '/^$/d' >> temp.txt
+          # 2. Добавляем вторую ссылку, также фильтруя только конфиги
+          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> list.txt
           
-          # 3. ПРЕВРАЩАЕМ ВСЁ В BASE64 (это решит проблему с Happ)
-          cat temp.txt | base64 -w 0 > list.txt
-          
-          # Удаляем временный файл
-          rm temp.txt
+          # 3. Финальная проверка: удаляем пустые строки и случайные пробелы в начале/конце строк
+          sed -i '/^$/d; s/^[[:space:]]*//; s/[[:space:]]*$//' list.txt
 
       - name: Commit and Push
         run: |
