@@ -15,11 +15,17 @@ jobs:
 
       - name: Download and Combine
         run: |
-          # 1. Скачиваем первую ссылку, удаляем первые 6 строк и оставляем ТОЛЬКО строки с vless/ss/trojan
-          curl -sL "https://raw.githubusercontent.com" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > list.txt
+          # 1. Скачиваем первую ссылку и пропускаем 6 строк заголовка
+          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 > list.txt
           
-          # 2. Добавляем вторую ссылку, также фильтруем только нужные протоколы
-          curl -sL "https://raw.githubusercontent.com" | grep -E "^(vless|ss|trojan|vmess)://" >> list.txt
+          # 2. Добавляем пустую строку (безопасно)
+          echo "" >> list.txt
+          
+          # 3. Добавляем вторую ссылку без изменений
+          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" >> list.txt
+          
+          # 4. Финальная очистка: удаляем пустые строки, чтобы Happ не ругался
+          sed -i '/^[[:space:]]*$/d' list.txt
 
       - name: Commit and Push
         run: |
