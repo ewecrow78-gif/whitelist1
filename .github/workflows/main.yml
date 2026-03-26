@@ -15,12 +15,14 @@ jobs:
 
       - name: Download and Combine
         run: |
-          # Скачиваем первую ссылку
-          curl -s "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" > list.txt
-          # Добавляем пустую строку для надежности
+          # Скачиваем первую ссылку, удаляем первые 6 строк (tail -n +7) и убираем пустые строки
+          curl -s "https://raw.githubusercontent.com" | tail -n +7 | grep -v '^$' > list.txt
+          
+          # Добавляем пустую строку для разделения
           echo "" >> list.txt
-          # Добавляем вторую ссылку в тот же файл
-          curl -s "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" >> list.txt
+          
+          # Добавляем вторую ссылку без изменений (только убираем пустые строки)
+          curl -s "https://raw.githubusercontent.com" | grep -v '^$' >> list.txt
 
       - name: Commit and Push
         run: |
