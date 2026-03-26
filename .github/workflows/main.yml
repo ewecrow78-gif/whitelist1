@@ -1,8 +1,8 @@
 name: Update My Configs
 on:
   schedule:
-    - cron: '0 */3 * * *' # Обновление каждые 3 часа
-  workflow_dispatch:      # Кнопка для ручного запуска
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -15,19 +15,19 @@ jobs:
 
       - name: Download and Combine
         run: |
-          # Скачиваем первую ссылку, удаляем первые 6 строк (tail -n +7) и убираем пустые строки
-          curl -s "https://raw.githubusercontent.com" | tail -n +7 | grep -v '^$' > list.txt
+          # 1. Скачиваем первую ссылку, пропускаем 6 строк и убираем пустые строки
+          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -v '^$' > list.txt
           
-          # Добавляем пустую строку для разделения
+          # 2. Добавляем пустую строку для разделения (необязательно, но полезно)
           echo "" >> list.txt
           
-          # Добавляем вторую ссылку без изменений (только убираем пустые строки)
-          curl -s "https://raw.githubusercontent.com" | grep -v '^$' >> list.txt
+          # 3. Добавляем вторую ссылку и убираем пустые строки
+          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -v '^$' >> list.txt
 
       - name: Commit and Push
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "action@github.com"
           git add list.txt
-          git commit -m "Update configs from sources" || exit 0
+          git commit -m "Update configs" || exit 0
           git push
