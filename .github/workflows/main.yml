@@ -67,7 +67,7 @@ jobs:
           DATE=$(TZ="Europe/Moscow" date +"%Y-%m-%d / %H:%M")
 
           # 4. Формируем финальный файл list.txt
-          echo "# profile-title: 🏳️ Gh0st_VPN | Белые списки" > list.txt
+          echo "# profile-title: 🏳️ Gh0st_VPN 🏳️ " > list.txt
           echo "# profile-update-interval: 3" >> list.txt
           echo "# Date/Time: $DATE (Moscow)" >> list.txt
           echo "# Количество рабочих: $COUNT" >> list.txt
