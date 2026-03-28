@@ -23,11 +23,11 @@ jobs:
         run: |
           # 1. Скачиваем конфиги из всех источников
           # Источник 1: igareck
-          curl -sL "https://raw.githubusercontent.com" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
+          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
           # Источник 2: zieng2
-          curl -sL "https://raw.githubusercontent.com" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
+          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           # Источник 3: FLEXIY0 (Matryoshka WhiteList)
-          curl -sL "https://raw.githubusercontent.com" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
+          curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           
           # Удаляем дубликаты
           sort -u raw_list.txt -o raw_list.txt
