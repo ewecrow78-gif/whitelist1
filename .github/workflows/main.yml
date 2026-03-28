@@ -2,7 +2,7 @@ name: Update My Configs
 
 on:
   schedule:
-    - cron: '0 */3 * * *' # Запуск каждые 3 часа
+    - cron: '0 * * * *' # Запуск каждый час
   workflow_dispatch:
 
 jobs:
@@ -21,61 +21,67 @@ jobs:
 
       - name: Download, Ping Check and Combine
         run: |
-          # 1. Скачиваем все конфиги в один временный файл
-          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt
-          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt
+          # 1. Скачиваем конфиги из всех источников
+          # Источник 1: igareck
+          curl -sL "https://raw.githubusercontent.com" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
+          # Источник 2: zieng2
+          curl -sL "https://raw.githubusercontent.com" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
+          # Источник 3: FLEXIY0 (Matryoshka WhiteList)
+          curl -sL "https://raw.githubusercontent.com" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           
-          # Удаляем дубликаты сразу
+          # Удаляем дубликаты
           sort -u raw_list.txt -o raw_list.txt
 
-          # 2. Встроенный Python-скрипт для проверки доступности портов (Пинг)
+          # 2. Ускоренный Python-скрипт (50 потоков)
           python3 - <<EOF
           import socket
           import re
+          from concurrent.futures import ThreadPoolExecutor
 
-          def is_alive(host, port):
+          def check_link(link):
+              link = link.strip()
+              if not link: return None
+              
+              # Регулярка для извлечения хоста и порта
+              match = re.search(r'@([^:/?#\s]+):(\d+)', link)
+              if not match:
+                  return link
+              
+              host, port = match.group(1), int(match.group(2))
               try:
+                  # Попытка установить TCP-соединение за 3 секунды
                   with socket.create_connection((host, port), timeout=3):
-                      return True
+                      return link
               except:
-                  return False
+                  return None
 
           with open('raw_list.txt', 'r') as f:
               links = f.readlines()
 
-          alive_configs = []
-          for link in links:
-              link = link.strip()
-              if not link: continue
-              
-              # Ищем хост и порт в ссылке
-              match = re.search(r'@([^:]+):(\d+)', link)
-              if match:
-                  host, port = match.group(1), int(match.group(2))
-                  if is_alive(host, port):
-                      alive_configs.append(link)
-              else:
-                  # Если это не ссылка на сервер (редко), просто оставляем
-                  alive_configs.append(link)
+          with ThreadPoolExecutor(max_workers=50) as executor:
+              results = list(executor.map(check_link, links))
+
+          # Сохраняем только "живые" конфиги
+          alive_configs = [r for r in results if r]
 
           with open('clean_configs.txt', 'w') as f:
               f.write('\n'.join(alive_configs))
           EOF
 
-          # 3. Собираем данные для шапки из проверенного списка
+          # 3. Собираем статистику
           COUNT=$(wc -l < clean_configs.txt)
           DATE=$(TZ="Europe/Moscow" date +"%Y-%m-%d / %H:%M")
 
           # 4. Формируем финальный файл list.txt
-          echo "# profile-title: 🏳️ Gh0st_VPN 🏳️ " > list.txt
-          echo "# profile-update-interval: 3" >> list.txt
+          echo "# profile-title: 🏳️ Gh0st_WhiteList 🏳️ " > list.txt
+          echo "# profile-update-interval: 1" >> list.txt
           echo "# Date/Time: $DATE (Moscow)" >> list.txt
           echo "# Количество рабочих: $COUNT" >> list.txt
-          echo "# Источники: igareck & zieng2 + Auto-Ping" >> list.txt
+          echo "# Источники: igareck, zieng2, FLEXIY0 (Matryoshka)" >> list.txt
           echo "" >> list.txt
           cat clean_configs.txt >> list.txt
 
-          # Удаляем мусор
+          # Чистим временные файлы
           rm raw_list.txt clean_configs.txt
 
       - name: Commit and Push
@@ -83,5 +89,6 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "action@github.com"
           git add list.txt
-          # Пушим только если список изменился
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update & Ping configs ($(TZ="Europe/Moscow" date +"%H:%M"))" && git push)
+          # Пушим только если есть изменения
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update configs ($(TZ="Europe/Moscow" date +"%H:%M"))" && git push)
+
