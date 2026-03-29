@@ -1,27 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Подключение Happ</title>
+    <title>Импорт конфигов в Happ</title>
     <script>
-        // Ссылка на ваши сырые конфиги
+        // Ваша прямая ссылка на файл с конфигами
         const configUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
-        // Протокол открытия Happ (или v2rayng://install-config?url=)
-        const deepLink = "happ://import/" + encodeURIComponent(configUrl);
+        
+        // ВАРИАНТ 1: Стандартный импорт через протокол v2rayng (Happ его понимает)
+        const linkV2ray = "v2rayng://install-config?url=" + encodeURIComponent(configUrl);
+        
+        // ВАРИАНТ 2: Прямой импорт Happ (если первый не подхватит)
+        const linkHapp = "happ://import/" + encodeURIComponent(configUrl);
 
-        function start() {
-            window.location.href = deepLink;
-            setTimeout(() => { 
-                if (!document.hidden) window.location.href = "https://play.google.com/store/apps/details?id=com.happproxy&hl=ru";
-            }, 2500);
+        function startImport() {
+            // Сначала пробуем v2rayng-совместимый импорт
+            window.location.href = linkV2ray;
+
+            // Через секунду пробуем специфичный для Happ, если первый не открылся
+            setTimeout(() => {
+                window.location.href = linkHapp;
+            }, 1000);
+
+            // Если через 4 секунды мы всё еще тут — отправляем в маркет
+            setTimeout(() => {
+                if (!document.hidden) {
+                    window.location.href = "https://play.google.com/store/apps/details?id=com.happproxy&hl=ru";
+                }
+            }, 4000);
         }
-        window.onload = start;
+
+        window.onload = startImport;
     </script>
 </head>
-<body>
-    <div style="text-align:center; margin-top:50px;">
-        <h2>Запуск Happ...</h2>
-        <a href="javascript:start()">Нажать вручную</a>
+<body style="background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif;">
+    <div style="text-align: center;">
+        <h2>🔄 Настройка подписки...</h2>
+        <p>Приложение должно открыться автоматически.</p>
+        <button onclick="startImport()" style="padding: 10px 20px; border-radius: 8px; border: none; background: #007bff; color: white; cursor: pointer;">
+            Импортировать вручную
+        </button>
     </div>
 </body>
 </html>
