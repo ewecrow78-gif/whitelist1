@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Подключение Happ</title>
+    <script>
+        // Ссылка на ваши сырые конфиги
+        const configUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
+        // Протокол открытия Happ (или v2rayng://install-config?url=)
+        const deepLink = "happ://import/" + encodeURIComponent(configUrl);
+
+        function start() {
+            window.location.href = deepLink;
+            setTimeout(() => { 
+                if (!document.hidden) window.location.href = "https://play.google.com/store/apps/details?id=com.happproxy&hl=ru";
+            }, 2500);
+        }
+        window.onload = start;
+    </script>
+</head>
+<body>
+    <div style="text-align:center; margin-top:50px;">
+        <h2>Запуск Happ...</h2>
+        <a href="javascript:start()">Нажать вручную</a>
+    </div>
+</body>
+</html>
