@@ -2,44 +2,53 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Импорт конфигов в Happ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghost WhiteList Setup</title>
     <script>
-        // Ваша прямая ссылка на файл с конфигами
+        // Твоя прямая ссылка на конфиги
         const configUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
-        
-        // ВАРИАНТ 1: Стандартный импорт через протокол v2rayng (Happ его понимает)
-        const linkV2ray = "v2rayng://install-config?url=" + encodeURIComponent(configUrl);
-        
-        // ВАРИАНТ 2: Прямой импорт Happ (если первый не подхватит)
-        const linkHapp = "happ://import/" + encodeURIComponent(configUrl);
+        const encodedUrl = encodeURIComponent(configUrl);
+        const name = encodeURIComponent("Ghost_WL");
 
-        function startImport() {
-            // Сначала пробуем v2rayng-совместимый импорт
-            window.location.href = linkV2ray;
+        // ТРИ ВАРИАНТА ССЫЛОК (Один из них должен запустить импорт)
+        const links = [
+            `happ://add-subscription?url=${encodedUrl}&name=${name}`, // Вариант 1 (Самый частый)
+            `happ://import/${configUrl}`,                            // Вариант 2 (Упрощенный)
+            `v2rayng://install-config?url=${encodedUrl}&name=${name}` // Вариант 3 (Универсальный)
+        ];
 
-            // Через секунду пробуем специфичный для Happ, если первый не открылся
-            setTimeout(() => {
-                window.location.href = linkHapp;
-            }, 1000);
+        let attempt = 0;
 
-            // Если через 4 секунды мы всё еще тут — отправляем в маркет
-            setTimeout(() => {
-                if (!document.hidden) {
-                    window.location.href = "https://play.google.com/store/apps/details?id=com.happproxy&hl=ru";
-                }
-            }, 4000);
+        function tryNext() {
+            if (attempt < links.length) {
+                console.log("Пробуем вариант:", links[attempt]);
+                window.location.href = links[attempt];
+                attempt++;
+                // Пробуем следующий вариант через 1.5 секунды, если страница не скрылась
+                setTimeout(() => {
+                    if (!document.hidden) tryNext();
+                }, 1500);
+            } else {
+                // Если ничего не сработало — в маркет
+                window.location.href = "https://play.google.com";
+            }
         }
 
-        window.onload = startImport;
+        window.onload = tryNext;
     </script>
+    <style>
+        body { background: #0b0b0b; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .loader { border: 4px solid #222; border-top: 4px solid #007bff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .btn { display: inline-block; padding: 12px 24px; background: #007bff; color: #fff; text-decoration: none; border-radius: 10px; font-weight: bold; margin-top: 20px; }
+    </style>
 </head>
-<body style="background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif;">
-    <div style="text-align: center;">
-        <h2>🔄 Настройка подписки...</h2>
-        <p>Приложение должно открыться автоматически.</p>
-        <button onclick="startImport()" style="padding: 10px 20px; border-radius: 8px; border: none; background: #007bff; color: white; cursor: pointer;">
-            Импортировать вручную
-        </button>
+<body>
+    <div>
+        <div class="loader"></div>
+        <h2>Импорт в Happ...</h2>
+        <p>Разрешите открытие приложения в запросе телефона</p>
+        <a href="javascript:location.reload()" class="btn">Повторить попытку</a>
     </div>
 </body>
 </html>
