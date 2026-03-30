@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gh0st_WhiteList Import</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .btn {
+            background-color: #800080;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(128, 0, 128, 0.4);
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #800080;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <h1>Перенаправление в приложение...</h1>
+    <p>Если импорт не начался автоматически, нажмите кнопку ниже:</p>
+    
+    <a id="importLink" href="#" class="btn">ДОБАВИТЬ КОНФИГИ</a>
+
+    <script>
+        // Твоя ссылка на Raw файл
+        const subUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
+        // Универсальный deep-link для v2ray/Happ/v2box
+        const deepLink = "v2rayng://install-config?url=" + subUrl;
+
+        // Устанавливаем ссылку на кнопку
+        document.getElementById('importLink').href = deepLink;
+
+        // Авто-редирект через 1.5 секунды
+        setTimeout(() => {
+            window.location.href = deepLink;
+        }, 1500);
+    </script>
+</body>
+</html>
