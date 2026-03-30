@@ -57,51 +57,25 @@
 </div>
 
 <script>
-    // Сюда вставляется ваша зашифрованная строка happ://...
-    const RAW = "happ://crypt5/rkwixuDfCI8g35pC2m15kpzSYEzWtlX9WeVJpfYAFmYWWkt62gSNUJmD8O8XrcafYeV3Fov4UcJzI+iAc+9cBZRfpF7uxoAOIgiqHcehJ95t9JrntxOpoFM1U97WaCrB+ktEJa6qWsi5rOTNtt/Lccjo1i+YW4iJlnfmPmjt==gwWuz0fTRpZKnitwuN1SW8GfHbRKPUQvuX Vfwl4Wd6tkycA1bHjbkG+EzUL5eCkYzuP6D16G9EfMMJ5e0KUlep6MmVXV+vNUlO2uinet/U4NAEH4ZDt4FFXP6McnGTEgdReOQCPBHENFhWsl37p6GsreaMn0eeyEQMK2L+VMolyyEJ90ESE7n+Nq0cQvW6hiITwO/pvz6G+nRPLq8YH4Zs5hloXe+P8gXKsl+XucGAWcIr84kaG1TnSP6wLyh zNz3Rn7Hb/3sOwGUZK9TAbaAkwvYZ7cxA4J43qtdbdu51Au/ujUa4hlSW//qqrnb7Q/NuXbtikVbHFDCX4EYOE4W1LPsUQLTNco10OXStL55Q VZXhgS9B3kHaTjvuPcbqjExLacW2TCXFgsf9evp/TcMkqul4/2PYR02ujDfYFx4mUSGqFK9s0DyHRMEP6emo/v3CP1rXufGBc9qhZNHvqfT1i HeVoFDPTqpOGPl0o+5NJx6tuL/Ff6+EItRuVplim1Id1sAeZ56g+0EZxgoPwzAkZYOUILEc7mhiualPlFQYp7XSQ0W5z056ib/Eedd/p3yI5n YGc68whah7vgJ/xwzF49AsFBzvI4LDuDptxMfYlM5JI9sBK+7jH7bjnRnGmPQSmQcFvRJKuOdAAOXd7ZnNYJEp8JDuII97pF1hAhJow=1Qggxl";
+    // 1. Очищаем ссылку от пробелов (в твоем сообщении они были)
+    const RAW_DATA = "happ://crypt5/rkwixuDfCI8g35pC2m15kpzSYEzWtlX9WeVJpfYAFmYWWkt62gSNUJmD8O8XrcafYeV3Fov4UcJzI+iAc+9cBZRfpF7uxoAOIgiqHcehJ95t9JrntxOpoFM1U97WaCrB+ktEJa6qWsi5rOTNtt/Lccjo1i+YW4iJlnfmPmjt==gwWuz0fTRpZKnitwuN1SW8GfHbRKPUQvuXVfwl4Wd6tkycA1bHjbkG+EzUL5eCkYzuP6D16G9EfMMJ5e0KUlep6MmVXV+vNUlO2uinet/U4NAEH4ZDt4FFXP6McnGTEgdReOQCPBHENFhWsl37p6GsreaMn0eeyEQMK2L+VMolyyEJ90ESE7n+Nq0cQvW6hiITwO/pvz6G+nRPLq8YH4Zs5hloXe+P8gXKsl+XucGAWcIr84kaG1TnSP6wLyhzNz3Rn7Hb/3sOwGUZK9TAbaAkwvYZ7cxA4J43qtdbdu51Au/ujUa4hlSW//qqrnb7Q/NuXbtikVbHFDCX4EYOE4W1LPsUQLTNco10OXStL55QVZXhgS9B3kHaTjvuPcbqjExLacW2TCXFgsf9evp/TcMkqul4/2PYR02ujDfYFx4mUSGqFK9s0DyHRMEP6emo/v3CP1rXufGBc9qhZNHvqfT1iHeVoFDPTqpOGPl0o+5NJx6tuL/Ff6+EItRuVplim1Id1sAeZ56g+0EZxgoPwzAkZYOUILEc7mhiualPlFQYp7XSQ0W5z056ib/Eedd/p3yI5nYGc68whah7vgJ/xwzF49AsFBzvI4LDuDptxMfYlM5JI9sBK+7jH7bjnRnGmPQSmQcFvRJKuOdAAOXd7ZnNYJEp8JDuII97pF1hAhJow=1Qggxl".replace(/\s/g, '');
 
     const ua = navigator.userAgent || '';
     const isAndroid = /Android/i.test(ua);
-    const isiOS = /iPhone|iPad|iPod/i.test(ua);
 
-    // Ссылки на магазины
-    const PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.happproxy';
-    const APP_STORE = 'https://apps.apple.com/app/id6504287215';
+    // 2. Формируем ссылку БЕЗ "add-subscription", просто чистый payload
+    const payload = RAW_DATA.replace(/^happ:\/\//i, '');
+    
+    // Для Android используем Intent для открытия приложения
+    const INTENT = `intent://${payload}#Intent;scheme=happ;package=com.happproxy;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.happproxy;end`;
 
-    // Проверка формата
-    if (!/^happ:\/\//i.test(RAW)) {
-        document.body.innerHTML = '<p style="color:#c00; text-align:center; padding-top:50px;">Ошибка: Неверный формат ссылки.</p>';
-        throw new Error("Invalid URL scheme");
-    }
-
-    // Логика формирования Intent для Android (позволяет перебросить в Store, если нет приложения)
-    const payload = RAW.replace(/^happ:\/\//i, '');
-    const INTENT = `intent://${payload}#Intent;scheme=happ;package=com.happproxy;S.browser_fallback_url=${encodeURIComponent(PLAY_STORE)};end`;
-
-    // Настройка кнопок
     const openBtn = document.getElementById('open');
-    const storeBtn = document.getElementById('store');
+    openBtn.href = isAndroid ? INTENT : RAW_DATA;
 
-    openBtn.href = isAndroid ? INTENT : RAW;
-    storeBtn.href = isAndroid ? PLAY_STORE : APP_STORE;
-
-    // Показываем кнопку магазина для iOS (или если Android не сработал сразу)
-    if (!isAndroid) {
-        storeBtn.style.display = 'inline-block';
-    }
-
-    // Автоматический переход
-    let cancelled = false;
-    ['visibilitychange', 'pagehide', 'blur'].forEach(ev => {
-        window.addEventListener(ev, () => { cancelled = true; }, { once: true });
-    });
-
+    // Авто-переход
     setTimeout(() => {
-        if (!cancelled) {
-            window.location.href = openBtn.href;
-        }
-    }, 150); // Небольшая задержка для стабильности
+        location.href = openBtn.href;
+    }, 200);
 </script>
-
 </body>
 </html>
