@@ -3,45 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Настройка прокси...</title>
+    <title>Подключение к Hiddify</title>
     <style>
-        body { background: #000; color: #fff; font-family: -apple-system, sans-serif; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .box { width: 90%; max-width: 400px; padding: 20px; border: 1px solid #333; border-radius: 20px; }
-        .btn { background: #007aff; color: #fff; padding: 18px; border-radius: 12px; text-decoration: none; font-weight: bold; display: block; border: none; width: 100%; font-size: 16px; cursor: pointer; }
-        .loader { border: 3px solid #222; border-top: 3px solid #007aff; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        body { background: #0f172a; color: #f8fafc; font-family: -apple-system, sans-serif; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { width: 90%; max-width: 380px; padding: 30px; border-radius: 24px; background: #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .btn { background: #3b82f6; color: #fff; padding: 16px; border-radius: 12px; text-decoration: none; font-weight: bold; display: block; border: none; width: 100%; font-size: 16px; cursor: pointer; margin-top: 20px; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); background: #2563eb; }
+        .loader { border: 3px solid #334155; border-top: 3px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="box">
+<div class="card">
     <div class="loader"></div>
-    <h3>Импорт в Happ</h3>
-    <p style="color: #888; font-size: 14px;">Сейчас приложение откроется автоматически...</p>
-    <button id="retry" class="btn">ОТКРЫТЬ ВРУЧНУЮ</button>
+    <h3>Импорт в Hiddify</h3>
+    <p style="color: #94a3b8; font-size: 14px;">Пытаемся автоматически добавить конфигурацию...</p>
+    <button id="manualBtn" class="btn">ОТКРЫТЬ ВРУЧНУЮ</button>
 </div>
 
 <script>
-    const rawUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
-    const playStore = "https://play.google.com/store/apps/details?id=com.happ.android";
+    // Твоя проверенная ссылка
+    const configUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
     
-    // Формируем ссылку: пробуем вариант с кодированием
-    const happLink = "happ://import/" + encodeURIComponent(rawUrl);
+    // Ссылка для Hiddify (официальный формат)
+    const hiddifyLink = "hiddify://install-config?url=" + encodeURIComponent(configUrl);
+    
+    // Ссылка на Hiddify в Google Play
+    const playStore = "https://play.google.com/store/apps/details?id=app.hiddify.com";
 
-    function launch() {
+    function openApp() {
         const a = document.createElement('a');
-        a.href = happLink;
+        a.href = hiddifyLink;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
     }
 
-    // Авто-запуск при входе
+    // Автоматический запуск
     window.onload = () => {
-        launch();
+        // Первая попытка сразу
+        openApp();
         
-        // Повторная попытка через секунду (для надежности)
-        setTimeout(launch, 1000);
+        // Вторая попытка через 800мс (для обхода блокировок браузера)
+        setTimeout(openApp, 800);
 
-        // Если через 8 секунд всё еще тут — значит приложения нет
+        // Если через 8 секунд всё еще на этой странице — идем в Google Play
         setTimeout(() => {
             if (document.hasFocus()) {
                 window.location.href = playStore;
@@ -49,8 +56,8 @@
         }, 8000);
     };
 
-    // Ручной запуск по кнопке
-    document.getElementById('retry').onclick = launch;
+    // Кнопка для ручного запуска
+    document.getElementById('manualBtn').onclick = openApp;
 </script>
 
 </body>
