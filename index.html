@@ -1,49 +1,106 @@
 <!doctype html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Настройка...</title>
+    <title>Переход в приложение...</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        .btn { display: inline-block; padding: 20px 30px; border-radius: 15px; background: #007aff; color: #fff; text-decoration: none; font-weight: bold; font-size: 20px; }
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            padding: 24px;
+            line-height: 1.5;
+            background-color: #f4f4f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .box {
+            max-width: 400px;
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+        .muted { opacity: .7; font-size: 0.9rem; margin-bottom: 1.5rem; }
+        .btn {
+            display: inline-block;
+            padding: .8rem 1.5rem;
+            border-radius: .6rem;
+            border: 1px solid #007bff;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: #0056b3; }
+        .btn-secondary {
+            background-color: transparent;
+            color: #555;
+            border-color: #ccc;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
-<div>
-    <p>Нажми кнопку для импорта в Happ:</p>
-    <a id="link" class="btn" href="#">ЗАПУСТИТЬ ИМПОРТ</a>
+<div class="box">
+    <h1>Открываем Happ...</h1>
+    <p class="muted">Если приложение не открылось автоматически, нажмите кнопку ниже.</p>
+    
+    <p><a id="open" class="btn" href="#">Открыть в Happ</a></p>
+    <p><a id="store" class="btn btn-secondary" href="#" style="display:none">Установить из магазина</a></p>
 </div>
 
 <script>
-    const CONFIG_URL = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
-    const encodedUrl = encodeURIComponent(CONFIG_URL);
+    // Сюда вставляется ваша зашифрованная строка happ://...
+    const RAW = "happ://crypt5/rkwixuDfCI8g35pC2m15kpzSYEzWtlX9WeVJpfYAFmYWWkt62gSNUJmD8O8XrcafYeV3Fov4UcJzI+iAc+9cBZRfpF7uxoAOIgiqHcehJ95t9JrntxOpoFM1U97WaCrB+ktEJa6qWsi5rOTNtt/Lccjo1i+YW4iJlnfmPmjt==gwWuz0fTRpZKnitwuN1SW8GfHbRKPUQvuX Vfwl4Wd6tkycA1bHjbkG+EzUL5eCkYzuP6D16G9EfMMJ5e0KUlep6MmVXV+vNUlO2uinet/U4NAEH4ZDt4FFXP6McnGTEgdReOQCPBHENFhWsl37p6GsreaMn0eeyEQMK2L+VMolyyEJ90ESE7n+Nq0cQvW6hiITwO/pvz6G+nRPLq8YH4Zs5hloXe+P8gXKsl+XucGAWcIr84kaG1TnSP6wLyh zNz3Rn7Hb/3sOwGUZK9TAbaAkwvYZ7cxA4J43qtdbdu51Au/ujUa4hlSW//qqrnb7Q/NuXbtikVbHFDCX4EYOE4W1LPsUQLTNco10OXStL55Q VZXhgS9B3kHaTjvuPcbqjExLacW2TCXFgsf9evp/TcMkqul4/2PYR02ujDfYFx4mUSGqFK9s0DyHRMEP6emo/v3CP1rXufGBc9qhZNHvqfT1i HeVoFDPTqpOGPl0o+5NJx6tuL/Ff6+EItRuVplim1Id1sAeZ56g+0EZxgoPwzAkZYOUILEc7mhiualPlFQYp7XSQ0W5z056ib/Eedd/p3yI5n YGc68whah7vgJ/xwzF49AsFBzvI4LDuDptxMfYlM5JI9sBK+7jH7bjnRnGmPQSmQcFvRJKuOdAAOXd7ZnNYJEp8JDuII97pF1hAhJow=1Qggxl";
 
-    // Список всех возможных ID приложения Happ
-    // Мы пробуем их по очереди, пока одно не сработает
-    const packageIds = [
-        "com.happ.android", 
-        "com.happproxy", 
-        "app.happ.com",
-        "com.happ.v2ray"
-    ];
+    const ua = navigator.userAgent || '';
+    const isAndroid = /Android/i.test(ua);
+    const isiOS = /iPhone|iPad|iPod/i.test(ua);
 
-    const linkElem = document.getElementById('link');
+    // Ссылки на магазины
+    const PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.happproxy';
+    const APP_STORE = 'https://apps.apple.com/app/id6504287215';
 
-    // Формируем "магическую" ссылку Intent
-    // Она заставляет Android искать приложение по ID
-    function getIntent(pkg) {
-        return `intent://import/${encodedUrl}#Intent;scheme=happ;package=${pkg};S.browser_fallback_url=https://play.google.com/store/apps/details?id=${pkg};end`;
+    // Проверка формата
+    if (!/^happ:\/\//i.test(RAW)) {
+        document.body.innerHTML = '<p style="color:#c00; text-align:center; padding-top:50px;">Ошибка: Неверный формат ссылки.</p>';
+        throw new Error("Invalid URL scheme");
     }
 
-    // При клике пробуем первый ID, если не пойдет - предложим другие
-    linkElem.href = getIntent(packageIds[0]);
+    // Логика формирования Intent для Android (позволяет перебросить в Store, если нет приложения)
+    const payload = RAW.replace(/^happ:\/\//i, '');
+    const INTENT = `intent://${payload}#Intent;scheme=happ;package=com.happproxy;S.browser_fallback_url=${encodeURIComponent(PLAY_STORE)};end`;
 
-    // Авто-попытка через 1 секунду
+    // Настройка кнопок
+    const openBtn = document.getElementById('open');
+    const storeBtn = document.getElementById('store');
+
+    openBtn.href = isAndroid ? INTENT : RAW;
+    storeBtn.href = isAndroid ? PLAY_STORE : APP_STORE;
+
+    // Показываем кнопку магазина для iOS (или если Android не сработал сразу)
+    if (!isAndroid) {
+        storeBtn.style.display = 'inline-block';
+    }
+
+    // Автоматический переход
+    let cancelled = false;
+    ['visibilitychange', 'pagehide', 'blur'].forEach(ev => {
+        window.addEventListener(ev, () => { cancelled = true; }, { once: true });
+    });
+
     setTimeout(() => {
-        window.location.href = getIntent(packageIds[0]);
-    }, 1000);
+        if (!cancelled) {
+            window.location.href = openBtn.href;
+        }
+    }, 150); // Небольшая задержка для стабильности
 </script>
 
 </body>
