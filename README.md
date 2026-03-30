@@ -9,6 +9,14 @@
 
 ---
 
+### ⚡ Текущий статус сети
+| Параметр | Значение |
+| :--- | :--- |
+| **Всего серверов** | 0 рабочих |
+| **Средний пинг** | ~0 ms |
+
+---
+
 ### 🌐 Ссылка на подписку (Subscription)
 `https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt`
 
