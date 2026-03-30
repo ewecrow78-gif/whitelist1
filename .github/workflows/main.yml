@@ -2,14 +2,14 @@ name: Update My Configs
 
 on:
   schedule:
-    - cron: '0 * * * *' # Каждый час
-  workflow_dispatch: # Кнопка для ручного запуска
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Даем права на запись
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
           curl -sL --max-time 15 "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           curl -sL --max-time 15 "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           
-          # 2. Python скрипт (мощная фильтрация и переименование)
+          # 2. Python скрипт (Чинит счетчик и переименовывает)
           python3 - <<EOF
           import socket
           import re
@@ -63,24 +63,22 @@ jobs:
                       return "vmess://" + base64.b64encode(json.dumps(data).encode('utf-8')).decode('utf-8')
                   except: return link
               
-              # Для vless/ss/trojan - удаляем старое название и ставим новое
+              # Очищаем старые теги и добавляем Gh0st_WhiteList #N
               base = link.split('#')[0]
               return f"{base}#{urllib.parse.quote(new_name)}"
 
           with open('raw_list.txt', 'r') as f:
-              # Убираем дубликаты сразу
               unique_links = list(dict.fromkeys([l.strip() for l in f if l.strip()]))
 
           with ThreadPoolExecutor(max_workers=50) as executor:
               valid_links = list(filter(None, executor.map(check_link, unique_links)))
 
-          # Переименовываем по порядку
           final_configs = [rename_link(link, i+1) for i, link in enumerate(valid_links)]
 
+          # ВАЖНО: Формат заголовка, который ищет твой бот
           with open('list.txt', 'w') as f:
-              # Заголовок для клиента
-              f.write("# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
-              f.write(f"# Updated: $(date)\n\n")
+              f.write(f"# Количество рабочих: {len(final_configs)}\n")
+              f.write(f"# Обновлено: \$(date)\n\n")
               f.write('\n'.join(final_configs))
           EOF
 
@@ -89,5 +87,5 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git add list.txt
-          # Принудительно коммитим, если файл изменился
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update configs" && git push)
+          git commit -m "Auto-update: renamed and fixed counter" || exit 0
+          git push origin main
