@@ -3,13 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Переход в приложение...</title>
+    <title>Открываем Happ…</title>
     <style>
         body {
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
             padding: 24px;
             line-height: 1.5;
-            background-color: #f4f4f9;
+            background-color: #f9f9f9;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -17,65 +17,86 @@
             margin: 0;
         }
         .box {
-            max-width: 400px;
-            text-align: center;
+            max-width: 480px;
+            width: 100%;
             background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            text-align: center;
         }
-        h1 { font-size: 1.5rem; margin-bottom: 1rem; }
-        .muted { opacity: .7; font-size: 0.9rem; margin-bottom: 1.5rem; }
+        h1 { font-size: 1.5rem; margin-bottom: 8px; color: #1a1a1a; }
+        .muted { opacity: .7; font-size: 0.95rem; margin-bottom: 24px; color: #666; }
         .btn {
             display: inline-block;
-            padding: .8rem 1.5rem;
-            border-radius: .6rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
             border: 1px solid #007bff;
             background-color: #007bff;
             color: white;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 600;
             transition: background 0.2s;
         }
         .btn:hover { background-color: #0056b3; }
-        .btn-secondary {
+        .btn-store {
+            margin-top: 12px;
             background-color: transparent;
             color: #555;
             border-color: #ccc;
-            margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h1>Открываем Happ...</h1>
-    <p class="muted">Если приложение не открылось автоматически, нажмите кнопку ниже.</p>
+    <h1>Открываем Happ…</h1>
+    <p class="muted">Если приложение не открылось автоматически — нажмите кнопку ниже.</p>
     
-    <p><a id="open" class="btn" href="#">Открыть в Happ</a></p>
-    <p><a id="store" class="btn btn-secondary" href="#" style="display:none">Установить из магазина</a></p>
+    <p><a id="open" class="btn" href="#" rel="noopener">Открыть в Happ</a></p>
+    <p><a id="store" class="btn btn-store" href="#" rel="noopener" style="display:none">Открыть магазин</a></p>
 </div>
 
 <script>
-    // 1. Очищаем ссылку от пробелов (в твоем сообщении они были)
-    const RAW_DATA = "happ://crypt5/rkwixuDfCI8g35pC2m15kpzSYEzWtlX9WeVJpfYAFmYWWkt62gSNUJmD8O8XrcafYeV3Fov4UcJzI+iAc+9cBZRfpF7uxoAOIgiqHcehJ95t9JrntxOpoFM1U97WaCrB+ktEJa6qWsi5rOTNtt/Lccjo1i+YW4iJlnfmPmjt==gwWuz0fTRpZKnitwuN1SW8GfHbRKPUQvuXVfwl4Wd6tkycA1bHjbkG+EzUL5eCkYzuP6D16G9EfMMJ5e0KUlep6MmVXV+vNUlO2uinet/U4NAEH4ZDt4FFXP6McnGTEgdReOQCPBHENFhWsl37p6GsreaMn0eeyEQMK2L+VMolyyEJ90ESE7n+Nq0cQvW6hiITwO/pvz6G+nRPLq8YH4Zs5hloXe+P8gXKsl+XucGAWcIr84kaG1TnSP6wLyhzNz3Rn7Hb/3sOwGUZK9TAbaAkwvYZ7cxA4J43qtdbdu51Au/ujUa4hlSW//qqrnb7Q/NuXbtikVbHFDCX4EYOE4W1LPsUQLTNco10OXStL55QVZXhgS9B3kHaTjvuPcbqjExLacW2TCXFgsf9evp/TcMkqul4/2PYR02ujDfYFx4mUSGqFK9s0DyHRMEP6emo/v3CP1rXufGBc9qhZNHvqfT1iHeVoFDPTqpOGPl0o+5NJx6tuL/Ff6+EItRuVplim1Id1sAeZ56g+0EZxgoPwzAkZYOUILEc7mhiualPlFQYp7XSQ0W5z056ib/Eedd/p3yI5nYGc68whah7vgJ/xwzF49AsFBzvI4LDuDptxMfYlM5JI9sBK+7jH7bjnRnGmPQSmQcFvRJKuOdAAOXd7ZnNYJEp8JDuII97pF1hAhJow=1Qggxl".replace(/\s/g, '');
-
+    // Твоя ссылка crypt5 (очищена от пробелов автоматически)
+    const RAW_SOURCE = "happ://crypt5/rkwiHlmIkYyMKKyx2u15d/Cs6mgssStWG1h5Qi0F8kw7evan/pgDnKAn97OcYo6H0QqabPpHr57+afxDnmSKTFJYNeey2Bsp7s+dqZSjyrrB5mBP17/Xm+Eguh3OoSOBJG2ETbBEMZSit4EaGo9nvXHR0HbL8rdpXk4Nfjcc==BQeODAPRPB0GSPDdCwU9pd5h9UYOLFmuIc XvwZ5TcIXZjhS/R3ONdVGD8ciW7fBha/HnKjTTaiD4Cpn4wnbUUDbyYTQd6T/gZQcMee9NddMyyF4XWtJSzus/o0uBRxVvcz/422Pw/3RRWwa tZPj7hNbKs+OJD1dAx2yvF7/ruRJBJ61r/PM3PBkkPWsEf2ofqhm7d5gFlF051+vfdXyMzT1dRVyxZqx03xnVORIMEx0ivwP5i06gAz9ual+zM RQE2oXWHyeCUaw4Pj3uAt3WH2sjjpYCfoDcepND5wTku41fS/6OntdGOu9+13+b3Gk4csBP7JUyIWKqtfwQ4NJSl6Rz3gFpTU58HfTC70IA5toC+3cOWIMLeLoLIVSr2dw4ircBBrd/4LPIS1CZBNMisG+TCOwHrvXc9XWGJY2fNJDSaj5m32lel8yHKd3R5EFIBfn6jN8BD6C4jPMhz5GjXn+ lcwprkZOtLbvJzFeajOs3tTZ4x51zqzI5bBLUzVFsPViSXJPiCzlj8ir7ATfOqIpM9WgKyuuVosyGlcFF4IpTdNVacfPMyLg8wVXEE1z9DkdE eypfDCHXWDQYjYIPBAPW3kz0yazfhaTtNZt93ItATlq7O4ZMzYEYH96vi5PM/UGVXZkcJqLnFyxBTh6K9FWV48r5FHmS8F1ncnD8/x4=15ggxl";
+    
+    const RAW = RAW_SOURCE.replace(/\s/g, ''); // Удаляем пробелы
     const ua = navigator.userAgent || '';
     const isAndroid = /Android/i.test(ua);
 
-    // 2. Формируем ссылку БЕЗ "add-subscription", просто чистый payload
-    const payload = RAW_DATA.replace(/^happ:\/\//i, '');
-    
-    // Для Android используем Intent для открытия приложения
-    const INTENT = `intent://${payload}#Intent;scheme=happ;package=com.happproxy;S.browser_fallback_url=https://play.google.com/store/apps/details?id=com.happproxy;end`;
+    // Проверка схемы
+    if(!/^happ:\/\/crypt5\//i.test(RAW)){
+        document.body.innerHTML = '<p style="color:#c00; text-align:center; margin-top:50px;">Неверная ссылка или формат.</p>';
+        throw 0;
+    }
+
+    const PLAY = 'https://play.google.com/store/apps/details?id=com.happproxy';
+    const APPSTORE = 'https://apps.apple.com/app/id6504287215';
+
+    const payload = RAW.replace(/^happ:\/\//i, '');
+    const INTENT = 'intent://' + payload + '#Intent;scheme=happ;package=com.happproxy;S.browser_fallback_url=' + encodeURIComponent(PLAY) + ';end';
 
     const openBtn = document.getElementById('open');
-    openBtn.href = isAndroid ? INTENT : RAW_DATA;
+    const storeBtn = document.getElementById('store');
 
-    // Авто-переход
+    openBtn.href = isAndroid ? INTENT : RAW;
+    storeBtn.href = isAndroid ? PLAY : APPSTORE;
+
+    if(!isAndroid) storeBtn.style.display = 'inline-block';
+
+    let cancelled = false;
+    ['visibilitychange', 'pagehide', 'blur'].forEach(ev => {
+        window.addEventListener(ev, () => { cancelled = true; }, { once: true });
+    });
+
+    // Автоматический редирект через 100мс
     setTimeout(() => {
-        location.href = openBtn.href;
-    }, 200);
+        if(!cancelled) {
+            window.location.href = openBtn.href;
+        }
+    }, 100);
 </script>
+
 </body>
 </html>
