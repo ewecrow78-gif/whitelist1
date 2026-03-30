@@ -2,8 +2,8 @@ name: Update My Configs
 
 on:
   schedule:
-    - cron: '0 * * * *' # Запуск ровно каждый час
-  workflow_dispatch: # Кнопка для ручного запуска
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -21,21 +21,23 @@ jobs:
 
       - name: Process Configs
         run: |
-          # 1. Собираем сырые данные из источников
+          # 1. Сбор данных
           curl -sL --max-time 15 "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
           curl -sL --max-time 15 "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           curl -sL --max-time 15 "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
-          
-          # 2. Мощный Python-скрипт (Фильтрация + Иконки + Нумерация)
+          curl -sL --max-time 15 "https://raw.githubusercontent.com/freev2rayspeed/v2ray/main/v2ray.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
+          curl -sL --max-time 15 "https://raw.githubusercontent.com/vfarid/v2ray-share/main/all.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
+
+          # 2. Python-скрипт: Фильтрация + Обновление счетчика в README
           python3 - <<EOF
           import socket
           import re
           import base64
           import json
+          import time
           import urllib.parse
           from concurrent.futures import ThreadPoolExecutor
 
-          # Регулярка для поиска флагов стран
           FLAGS_RE = re.compile(r'[\U0001F1E6-\U0001F1FF]{2}')
 
           def get_host_port(link):
@@ -44,8 +46,7 @@ jobs:
                       data = json.loads(base64.b64decode(link[8:]).decode('utf-8'))
                       return data.get('add'), int(data.get('port'))
                   match = re.search(r'@([^:/?#\s]+):(\d+)', link)
-                  if match:
-                      return match.group(1), int(match.group(2))
+                  if match: return match.group(1), int(match.group(2))
               except: pass
               return None, None
 
@@ -53,23 +54,20 @@ jobs:
               host, port = get_host_port(link)
               if not host or not port: return None
               try:
-                  # Проверка доступности (фильтрация)
+                  start = time.time()
                   with socket.create_connection((host, port), timeout=2.5):
-                      return link
+                      ping = int((time.time() - start) * 1000)
+                      return (link, ping)
               except: return None
 
           def rename_link(link, index):
-              original_name = ""
+              orig_name = ""
               if link.startswith('vmess://'):
-                  try:
-                      data = json.loads(base64.b64decode(link[8:]).decode('utf-8'))
-                      original_name = data.get('ps', '')
+                  try: orig_name = json.loads(base64.b64decode(link[8:]).decode('utf-8')).get('ps', '')
                   except: pass
-              elif '#' in link:
-                  original_name = urllib.parse.unquote(link.split('#')[1])
+              elif '#' in link: orig_name = urllib.parse.unquote(link.split('#')[1])
               
-              # Вытаскиваем флаг или ставим глобус
-              flag_match = FLAGS_RE.findall(original_name)
+              flag_match = FLAGS_RE.findall(orig_name)
               flag = flag_match[0] + " " if flag_match else "🌐 "
               new_name = f"{flag}Gh0st_WhiteList #{index}"
 
@@ -79,32 +77,42 @@ jobs:
                       data['ps'] = new_name
                       return "vmess://" + base64.b64encode(json.dumps(data).encode('utf-8')).decode('utf-8')
                   except: return link
-              
-              base = link.split('#')[0]
-              return f"{base}#{urllib.parse.quote(new_name)}"
+              return f"{link.split('#')[0]}#{urllib.parse.quote(new_name)}"
 
           with open('raw_list.txt', 'r') as f:
-              unique_links = list(dict.fromkeys([l.strip() for l in f if l.strip()]))
+              unique = list(dict.fromkeys([l.strip() for l in f if l.strip()]))
 
-          # Сама фильтрация (проверка живых серверов)
-          with ThreadPoolExecutor(max_workers=50) as executor:
-              valid_links = list(filter(None, executor.map(check_link, unique_links)))
+          with ThreadPoolExecutor(max_workers=100) as exec:
+              results = list(filter(None, exec.map(check_link, unique)))
 
-          final_configs = [rename_link(link, i+1) for i, link in enumerate(valid_links)]
+          results.sort(key=lambda x: x[1]) 
+          final_configs = [rename_link(r[0], i+1) for i, r in enumerate(results)]
 
-          # Формируем файл list.txt (ВАЖНО ДЛЯ БОТА!)
+          # Запись в list.txt (для бота и приложений)
           with open('list.txt', 'w') as f:
               f.write(f"# Количество рабочих: {len(final_configs)}\n")
-              f.write(f"# Last Update: \$(date +'%d.%m.%Y %H:%M') (MSK)\n")
-              f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
-              f.write(f"# profile-update-interval: 1\n\n")
+              f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n\n")
               f.write('\n'.join(final_configs))
+
+          # Обновление README.md (только количество)
+          try:
+              with open('README.md', 'r', encoding='utf-8') as f:
+                  content = f.read()
+              
+              # Ищет строку и заменяет число
+              new_content = re.sub(r'\*\*Актуальное количество серверов\*\* \| .*', f'**Актуальное количество серверов** | {len(final_configs)} рабочих', content)
+              # Если формат в README просто текстом (без таблицы):
+              new_content = re.sub(r'\*\*Актуальное количество серверов\*\*:\s*\d+\s*рабочих', f'**Актуальное количество серверов**: {len(final_configs)} рабочих', new_content)
+              
+              with open('README.md', 'w', encoding='utf-8') as f:
+                  f.write(new_content)
+          except Exception as e:
+              print(f"Error updating README: {e}")
           EOF
 
       - name: Commit and Push
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git add list.txt
-          # Коммитим только если есть изменения
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update: fixed counter and icons" && git push)
+          git add list.txt README.md
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update server count: $(date +'%d.%m %H:%M')" && git push)
