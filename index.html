@@ -1,34 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fix</title>
+    <title>Настройка прокси...</title>
+    <style>
+        body { background: #000; color: #fff; font-family: -apple-system, sans-serif; text-align: center; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .box { width: 90%; max-width: 400px; padding: 20px; border: 1px solid #333; border-radius: 20px; }
+        .btn { background: #007aff; color: #fff; padding: 18px; border-radius: 12px; text-decoration: none; font-weight: bold; display: block; border: none; width: 100%; font-size: 16px; cursor: pointer; }
+        .loader { border: 3px solid #222; border-top: 3px solid #007aff; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body style="background: #000; color: #fff; text-align: center; padding-top: 50px;">
+<body>
 
-    <button id="go" style="padding: 20px; width: 80%; background: #007bff; color: white; border-radius: 10px; border: none; font-weight: bold;">
-        ИМПОРТИРОВАТЬ В HAPP
-    </button>
+<div class="box">
+    <div class="loader"></div>
+    <h3>Импорт в Happ</h3>
+    <p style="color: #888; font-size: 14px;">Сейчас приложение откроется автоматически...</p>
+    <button id="retry" class="btn">ОТКРЫТЬ ВРУЧНУЮ</button>
+</div>
 
-    <script>
-        document.getElementById('go').onclick = function() {
-            const rawUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt"; // ВСТАВЬ СВОЮ ССЫЛКУ СЮДА
-            const happLink = "happ://import/" + rawUrl; 
-            const playStore = "https://play.google.com/store/apps/details?id=com.happproxy&hl=ru";
+<script>
+    const rawUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
+    const playStore = "https://play.google.com/store/apps/details?id=com.happ.android";
+    
+    // Формируем ссылку: пробуем вариант с кодированием
+    const happLink = "happ://import/" + encodeURIComponent(rawUrl);
 
-            // Создаем невидимую ссылку и имитируем реальный клик
-            const a = document.createElement('a');
-            a.href = happLink;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+    function launch() {
+        const a = document.createElement('a');
+        a.href = happLink;
+        a.click();
+    }
 
-            // Таймер для редиректа в стор, если не открылось
-            setTimeout(function() {
+    // Авто-запуск при входе
+    window.onload = () => {
+        launch();
+        
+        // Повторная попытка через секунду (для надежности)
+        setTimeout(launch, 1000);
+
+        // Если через 8 секунд всё еще тут — значит приложения нет
+        setTimeout(() => {
+            if (document.hasFocus()) {
                 window.location.href = playStore;
-            }, 2500);
-        };
-    </script>
+            }
+        }, 8000);
+    };
+
+    // Ручной запуск по кнопке
+    document.getElementById('retry').onclick = launch;
+</script>
+
 </body>
 </html>
