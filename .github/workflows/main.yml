@@ -2,8 +2,8 @@ name: Update My Configs
 
 on:
   schedule:
-    - cron: '0 * * * *'
-  workflow_dispatch:
+    - cron: '0 * * * *' # Запуск ровно каждый час
+  workflow_dispatch: # Кнопка для ручного запуска
 
 jobs:
   build:
@@ -21,12 +21,12 @@ jobs:
 
       - name: Process Configs
         run: |
-          # 1. Сбор данных
+          # 1. Собираем сырые данные из источников
           curl -sL --max-time 15 "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
           curl -sL --max-time 15 "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           curl -sL --max-time 15 "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           
-          # 2. Python скрипт (Чинит счетчик и переименовывает)
+          # 2. Мощный Python-скрипт (Фильтрация + Иконки + Нумерация)
           python3 - <<EOF
           import socket
           import re
@@ -34,6 +34,9 @@ jobs:
           import json
           import urllib.parse
           from concurrent.futures import ThreadPoolExecutor
+
+          # Регулярка для поиска флагов стран
+          FLAGS_RE = re.compile(r'[\U0001F1E6-\U0001F1FF]{2}')
 
           def get_host_port(link):
               try:
@@ -50,12 +53,26 @@ jobs:
               host, port = get_host_port(link)
               if not host or not port: return None
               try:
+                  # Проверка доступности (фильтрация)
                   with socket.create_connection((host, port), timeout=2.5):
                       return link
               except: return None
 
           def rename_link(link, index):
-              new_name = f"Gh0st_WhiteList #{index}"
+              original_name = ""
+              if link.startswith('vmess://'):
+                  try:
+                      data = json.loads(base64.b64decode(link[8:]).decode('utf-8'))
+                      original_name = data.get('ps', '')
+                  except: pass
+              elif '#' in link:
+                  original_name = urllib.parse.unquote(link.split('#')[1])
+              
+              # Вытаскиваем флаг или ставим глобус
+              flag_match = FLAGS_RE.findall(original_name)
+              flag = flag_match[0] + " " if flag_match else "🌐 "
+              new_name = f"{flag}Gh0st_WhiteList #{index}"
+
               if link.startswith('vmess://'):
                   try:
                       data = json.loads(base64.b64decode(link[8:]).decode('utf-8'))
@@ -63,22 +80,24 @@ jobs:
                       return "vmess://" + base64.b64encode(json.dumps(data).encode('utf-8')).decode('utf-8')
                   except: return link
               
-              # Очищаем старые теги и добавляем Gh0st_WhiteList #N
               base = link.split('#')[0]
               return f"{base}#{urllib.parse.quote(new_name)}"
 
           with open('raw_list.txt', 'r') as f:
               unique_links = list(dict.fromkeys([l.strip() for l in f if l.strip()]))
 
+          # Сама фильтрация (проверка живых серверов)
           with ThreadPoolExecutor(max_workers=50) as executor:
               valid_links = list(filter(None, executor.map(check_link, unique_links)))
 
           final_configs = [rename_link(link, i+1) for i, link in enumerate(valid_links)]
 
-          # ВАЖНО: Формат заголовка, который ищет твой бот
+          # Формируем файл list.txt (ВАЖНО ДЛЯ БОТА!)
           with open('list.txt', 'w') as f:
               f.write(f"# Количество рабочих: {len(final_configs)}\n")
-              f.write(f"# Обновлено: \$(date)\n\n")
+              f.write(f"# Last Update: \$(date +'%d.%m.%Y %H:%M') (MSK)\n")
+              f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
+              f.write(f"# profile-update-interval: 1\n\n")
               f.write('\n'.join(final_configs))
           EOF
 
@@ -87,5 +106,5 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git add list.txt
-          git commit -m "Auto-update: renamed and fixed counter" || exit 0
-          git push origin main
+          # Коммитим только если есть изменения
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update: fixed counter and icons" && git push)
