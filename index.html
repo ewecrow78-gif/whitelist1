@@ -1,102 +1,55 @@
 <!doctype html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Открываем Happ…</title>
-    <style>
-        body {
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
-            padding: 24px;
-            line-height: 1.5;
-            background-color: #f9f9f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .box {
-            max-width: 480px;
-            width: 100%;
-            background: white;
-            padding: 32px;
-            border-radius: 16px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-        h1 { font-size: 1.5rem; margin-bottom: 8px; color: #1a1a1a; }
-        .muted { opacity: .7; font-size: 0.95rem; margin-bottom: 24px; color: #666; }
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            border: 1px solid #007bff;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        .btn:hover { background-color: #0056b3; }
-        .btn-store {
-            margin-top: 12px;
-            background-color: transparent;
-            color: #555;
-            border-color: #ccc;
-        }
-    </style>
-</head>
-<body>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Opening Happ…</title>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif; padding: 24px; line-height: 1.5; }
+  .box { max-width: 720px; margin: auto; }
+  .muted { opacity: .7; }
+  .btn { display: inline-block; padding: .6rem 1rem; border-radius: .6rem; border: 1px solid #ccc; text-decoration: none; color: #000; }
+</style>
 
 <div class="box">
-    <h1>Открываем Happ…</h1>
-    <p class="muted">Если приложение не открылось автоматически — нажмите кнопку ниже.</p>
-    
-    <p><a id="open" class="btn" href="#" rel="noopener">Открыть в Happ</a></p>
-    <p><a id="store" class="btn btn-store" href="#" rel="noopener" style="display:none">Открыть магазин</a></p>
+  <h1>Открываем Happ…</h1>
+  <p class="muted">Если не открылось автоматически — нажмите кнопку ниже.</p>
+  <p><a id="open" class="btn" href="#" rel="noopener">Открыть в Happ</a></p>
+  <p><a id="store" class="btn" href="#" rel="noopener" style="display:none">Открыть магазин</a></p>
 </div>
 
 <script>
-    // Твоя ссылка crypt5 (очищена от пробелов автоматически)
-    const RAW_SOURCE = "happ://crypt5/rkwiHlmIkYyMKKyx2u15d/Cs6mgssStWG1h5Qi0F8kw7evan/pgDnKAn97OcYo6H0QqabPpHr57+afxDnmSKTFJYNeey2Bsp7s+dqZSjyrrB5mBP17/Xm+Eguh3OoSOBJG2ETbBEMZSit4EaGo9nvXHR0HbL8rdpXk4Nfjcc==BQeODAPRPB0GSPDdCwU9pd5h9UYOLFmuIc XvwZ5TcIXZjhS/R3ONdVGD8ciW7fBha/HnKjTTaiD4Cpn4wnbUUDbyYTQd6T/gZQcMee9NddMyyF4XWtJSzus/o0uBRxVvcz/422Pw/3RRWwa tZPj7hNbKs+OJD1dAx2yvF7/ruRJBJ61r/PM3PBkkPWsEf2ofqhm7d5gFlF051+vfdXyMzT1dRVyxZqx03xnVORIMEx0ivwP5i06gAz9ual+zM RQE2oXWHyeCUaw4Pj3uAt3WH2sjjpYCfoDcepND5wTku41fS/6OntdGOu9+13+b3Gk4csBP7JUyIWKqtfwQ4NJSl6Rz3gFpTU58HfTC70IA5toC+3cOWIMLeLoLIVSr2dw4ircBBrd/4LPIS1CZBNMisG+TCOwHrvXc9XWGJY2fNJDSaj5m32lel8yHKd3R5EFIBfn6jN8BD6C4jPMhz5GjXn+ lcwprkZOtLbvJzFeajOs3tTZ4x51zqzI5bBLUzVFsPViSXJPiCzlj8ir7ATfOqIpM9WgKyuuVosyGlcFF4IpTdNVacfPMyLg8wVXEE1z9DkdE eypfDCHXWDQYjYIPBAPW3kz0yazfhaTtNZt93ItATlq7O4ZMzYEYH96vi5PM/UGVXZkcJqLnFyxBTh6K9FWV48r5FHmS8F1ncnD8/x4=15ggxl";
-    
-    const RAW = RAW_SOURCE.replace(/\s/g, ''); // Удаляем пробелы
-    const ua = navigator.userAgent || '';
-    const isAndroid = /Android/i.test(ua);
+  // Ваша новая ссылка
+  const RAW = "happ://crypt5/rkwiNPe9LxEm9PbM2r15Pl9NvG0DlPZ1SCpmGNdVWDvwRkwj+hmcQEcuwk5OOinb4yDoXhpUJolsOwcl9dbudz4zigB8h1MiLIui+TIS3Zq3L8tdm7XgjE0tfAqnyf6udsyeK2BTNac4Hv+1L/fNuLgCL/xZ+Dy5zUDGUB7M==Ogrwd+75twA3/2PWJNMLDiDIh4mnmE2rY+ FASoPYO9wqEyNPC3YD3YXJqhfEO9sjhEiKiveFDoNQDBbqnVyX4W81gwLsNWzBZCw1I+BVfpzbP2D3qOg194gLV01g/MnsqmIEVCKRDXlYEou YkqDhWSnOq+OHWF8uOnVn5gEWLks0rA3bWxjOI2x6IUZEwThPzaQk13AYvvy7kPfzMqcf5ALq/mXO8dNtYOITjQm9oJAHSuFeGTq4UBXJI+5A PDd120kHER7wCYVAYgNSq+FXmeGxQgaHquweJs/fQonGhpCuexzPcI45pu3KZgZ+fu5kTRCNAIc28TvfIvU9P90vVBMfTPIOY4X5y9fz3LAwugKO1RisGIz/WYpMUb1+Vj9LvmSM3nB3OU9AYRFdEY22k1ekfLc6KVKASJejy2A6Us9azfnjkbu2LMlg/UrLxwdGkMoTGdA4DlGkNzxx2PUwLc EHDNJYfr6eeyrXYpCsX0cU6KdGkkRQS2f8DbijvW50rOL6gN8h9BeGbVB3Atw9SX8Q5/M1W2JCJUM7K6IN2tyJfA40qc/N+zdHStrrutWCu4t HJveYMOa3QAS/rt4lJAAOzZpszRzUXB2bueI3+Nk9XB/Lb8cAk0TNplD/ij6KwB9C0DRQ7BMz8Ei/SukIXH+RVl9+TrHhb8PI+GFOQU=R5ggxl";
 
-    // Проверка схемы
-    if(!/^happ:\/\/crypt5\//i.test(RAW)){
-        document.body.innerHTML = '<p style="color:#c00; text-align:center; margin-top:50px;">Неверная ссылка или формат.</p>';
-        throw 0;
-    }
+  const ua = navigator.userAgent || '';
+  const isAndroid = /Android/i.test(ua);
 
-    const PLAY = 'https://play.google.com/store/apps/details?id=com.happproxy';
-    const APPSTORE = 'https://apps.apple.com/app/id6504287215';
+  // Проверка формата ссылки (поддерживает crypt4 и crypt5)
+  if (!/^happ:\/\/crypt[45]\//i.test(RAW)) {
+    document.body.innerHTML = '<p style="color:#c00">Неверная ссылка.</p>';
+    throw 0;
+  }
 
-    const payload = RAW.replace(/^happ:\/\//i, '');
-    const INTENT = 'intent://' + payload + '#Intent;scheme=happ;package=com.happproxy;S.browser_fallback_url=' + encodeURIComponent(PLAY) + ';end';
+  const PLAY = 'https://play.google.com/store/apps/details?id=com.happproxy';
+  const APPSTORE = 'https://apps.apple.com/app/id6504287215';
 
-    const openBtn = document.getElementById('open');
-    const storeBtn = document.getElementById('store');
+  const payload = RAW.replace(/^happ:\/\//i, '');
+  const INTENT = 'intent://' + payload + '#Intent;scheme=happ;package=com.happproxy;S.browser_fallback_url=' + encodeURIComponent(PLAY) + ';end';
 
-    openBtn.href = isAndroid ? INTENT : RAW;
-    storeBtn.href = isAndroid ? PLAY : APPSTORE;
+  const openBtn = document.getElementById('open');
+  const storeBtn = document.getElementById('store');
 
-    if(!isAndroid) storeBtn.style.display = 'inline-block';
+  openBtn.href = isAndroid ? INTENT : RAW;
+  storeBtn.href = isAndroid ? PLAY : APPSTORE;
 
-    let cancelled = false;
-    ['visibilitychange', 'pagehide', 'blur'].forEach(ev => {
-        window.addEventListener(ev, () => { cancelled = true; }, { once: true });
-    });
+  if (!isAndroid) storeBtn.style.display = 'inline-block';
 
-    // Автоматический редирект через 100мс
-    setTimeout(() => {
-        if(!cancelled) {
-            window.location.href = openBtn.href;
-        }
-    }, 100);
+  let cancelled = false;
+  ['visibilitychange', 'pagehide', 'blur'].forEach(ev => {
+    addEventListener(ev, () => { cancelled = true }, { once: true });
+  });
+
+  // Автоматический переход
+  setTimeout(() => {
+    if (!cancelled) location.href = openBtn.href;
+  }, 80);
 </script>
-
-</body>
-</html>
