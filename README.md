@@ -12,7 +12,7 @@
 ### ⚡ Текущий статус сети
 | Параметр | Статус |
 | :--- | :--- |
-| **Всего серверов** | [![](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt&label=Online&color=brightgreen)](https://github.com/ewecrow78-gif/whitelist1/blob/main/list.txt) |
+| **Всего серверов** | **Актуальное количество серверов** |
 | **Средний Ping** | ~150-250ms (Оптимизировано для РФ) |
 | **Проверка на доступность** | ✅ Каждые 60 минут |
 
