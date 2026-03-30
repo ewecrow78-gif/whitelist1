@@ -1,49 +1,49 @@
 <!doctype html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Подключение Happ...</title>
+    <title>Настройка...</title>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        .box { padding: 20px; }
-        .btn { display: inline-block; padding: 15px 25px; border-radius: 12px; background: #007aff; color: #fff; text-decoration: none; font-weight: bold; margin-top: 20px; }
+        body { background: #000; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .btn { display: inline-block; padding: 20px 30px; border-radius: 15px; background: #007aff; color: #fff; text-decoration: none; font-weight: bold; font-size: 20px; }
     </style>
 </head>
 <body>
 
-<div class="box">
-    <h1>Настройка Happ</h1>
-    <p id="msg">Пытаемся открыть приложение...</p>
-    <a id="openBtn" class="btn" href="#">ОТКРЫТЬ ВРУЧНУЮ</a>
+<div>
+    <p>Нажми кнопку для импорта в Happ:</p>
+    <a id="link" class="btn" href="#">ЗАПУСТИТЬ ИМПОРТ</a>
 </div>
 
 <script>
-    // 1. Твоя прямая ссылка (не зашифрованная, а чистая)
     const CONFIG_URL = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
-    
-    // 2. Формируем путь для Happ
-    const payload = "import/" + encodeURIComponent(CONFIG_URL);
-    
-    // 3. Ссылка для Google Play
-    const PLAY_STORE = "https://play.google.com/store/apps/details?id=com.happ.android";
+    const encodedUrl = encodeURIComponent(CONFIG_URL);
 
-    // 4. Генерируем Intent специально для Happ (указываем его package)
-    // Это заставит Android игнорировать v2rayNG и искать именно Happ
-    const INTENT = "intent://" + payload + "#Intent;scheme=happ;package=com.happ.android;S.browser_fallback_url=" + encodeURIComponent(PLAY_STORE) + ";end";
+    // Список всех возможных ID приложения Happ
+    // Мы пробуем их по очереди, пока одно не сработает
+    const packageIds = [
+        "com.happ.android", 
+        "com.happproxy", 
+        "app.happ.com",
+        "com.happ.v2ray"
+    ];
 
-    const openBtn = document.getElementById('openBtn');
-    openBtn.href = INTENT;
+    const linkElem = document.getElementById('link');
 
-    // Пытаемся запустить автоматически
-    let aborted = false;
-    ['visibilitychange', 'pagehide', 'blur'].forEach(ev => window.addEventListener(ev, () => aborted = true));
+    // Формируем "магическую" ссылку Intent
+    // Она заставляет Android искать приложение по ID
+    function getIntent(pkg) {
+        return `intent://import/${encodedUrl}#Intent;scheme=happ;package=${pkg};S.browser_fallback_url=https://play.google.com/store/apps/details?id=${pkg};end`;
+    }
 
+    // При клике пробуем первый ID, если не пойдет - предложим другие
+    linkElem.href = getIntent(packageIds[0]);
+
+    // Авто-попытка через 1 секунду
     setTimeout(() => {
-        if (!aborted) {
-            window.location.href = INTENT;
-        }
-    }, 500);
+        window.location.href = getIntent(packageIds[0]);
+    }, 1000);
 </script>
 
 </body>
