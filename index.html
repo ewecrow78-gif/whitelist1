@@ -1,55 +1,33 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Загрузка конфигурации...</title>
-    <style>
-        body { background: #121212; color: #aaa; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
-        .loader { border: 4px solid #333; border-top: 4px solid #007aff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+    <title>Fix</title>
 </head>
-<body>
+<body style="background: #000; color: #fff; text-align: center; padding-top: 50px;">
 
-    <div>
-        <div class="loader"></div>
-        <p>Открываем Happ... Подождите</p>
-        <p style="font-size: 12px; color: #555;">Если ничего не происходит, проверьте установку приложения</p>
-    </div>
+    <button id="go" style="padding: 20px; width: 80%; background: #007bff; color: white; border-radius: 10px; border: none; font-weight: bold;">
+        ИМПОРТИРОВАТЬ В HAPP
+    </button>
 
     <script>
-        window.onload = function() {
-            // 1. ТВОЯ ССЫЛКА НА КОНФИГ (ЗАМЕНИ ТУТ!)
-            const rawUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
-            
-            const happLink = "happ://import/" + rawUrl;
+        document.getElementById('go').onclick = function() {
+            const rawUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt"; // ВСТАВЬ СВОЮ ССЫЛКУ СЮДА
+            const happLink = "happ://import/" + rawUrl; 
             const playStore = "https://play.google.com/store/apps/details?id=com.happ.android";
 
-            const start = Date.now();
+            // Создаем невидимую ссылку и имитируем реальный клик
+            const a = document.createElement('a');
+            a.href = happLink;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
 
-            // Функция для попытки открытия
-            function tryOpen() {
-                const a = document.createElement('a');
-                a.href = happLink;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            }
-
-            // Попытка №1: Сразу при загрузке
-            tryOpen();
-
-            // Попытка №2: Через 500мс (если браузер затупил на старте)
-            setTimeout(tryOpen, 500);
-
-            // Редирект в Google Play через 5 секунд (5000 мс)
+            // Таймер для редиректа в стор, если не открылось
             setTimeout(function() {
-                // Если за 5 секунд страница не ушла в фокус (приложение не открылось)
-                if (Date.now() - start < 6000) {
-                    window.location.href = playStore;
-                }
-            }, 5000);
+                window.location.href = playStore;
+            }, 2500);
         };
     </script>
 </body>
