@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix</title>
+</head>
+<body style="background: #000; color: #fff; text-align: center; padding-top: 50px;">
+
+    <button id="go" style="padding: 20px; width: 80%; background: #007bff; color: white; border-radius: 10px; border: none; font-weight: bold;">
+        ИМПОРТИРОВАТЬ В HAPP
+    </button>
+
+    <script>
+        document.getElementById('go').onclick = function() {
+            const rawUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt"; // ВСТАВЬ СВОЮ ССЫЛКУ СЮДА
+            const happLink = "happ://import/" + rawUrl; 
+            const playStore = "https://play.google.com/store/apps/details?id=com.happ.android";
+
+            // Создаем невидимую ссылку и имитируем реальный клик
+            const a = document.createElement('a');
+            a.href = happLink;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // Таймер для редиректа в стор, если не открылось
+            setTimeout(function() {
+                window.location.href = playStore;
+            }, 2500);
+        };
+    </script>
+</body>
+</html>
