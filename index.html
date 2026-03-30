@@ -1,50 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Настройка Happ</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Подключение Happ...</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { width: 90%; max-width: 400px; text-align: center; background: #1a1a1a; padding: 30px; border-radius: 25px; border: 1px solid #333; }
-        .btn { display: block; width: 100%; padding: 20px 0; background: #007aff; color: #fff; text-decoration: none; border-radius: 15px; font-size: 18px; font-weight: bold; border: none; cursor: pointer; }
-        .info { color: #888; font-size: 13px; margin-top: 15px; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        .box { padding: 20px; }
+        .btn { display: inline-block; padding: 15px 25px; border-radius: 12px; background: #007aff; color: #fff; text-decoration: none; font-weight: bold; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Импорт в Happ</h2>
-    <p>Нажми на кнопку. Если предложит выбор — выбери **Happ**.</p>
-    
-    <button onclick="openHappOnly()" class="btn">ОТКРЫТЬ В HAPP</button>
-    
-    <div class="info">
-        Ссылка: <br>
-        <span style="word-break: break-all; color: #555;">https://raw.githubusercontent.com/.../list.txt</span>
-    </div>
+<div class="box">
+    <h1>Настройка Happ</h1>
+    <p id="msg">Пытаемся открыть приложение...</p>
+    <a id="openBtn" class="btn" href="#">ОТКРЫТЬ ВРУЧНУЮ</a>
 </div>
 
 <script>
-    function openHappOnly() {
-        const rawUrl = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
-        
-        // Оставляем ТОЛЬКО специфичный для Happ протокол
-        const happLink = "happ://import/" + encodeURIComponent(rawUrl);
+    // 1. Твоя прямая ссылка (не зашифрованная, а чистая)
+    const CONFIG_URL = "https://raw.githubusercontent.com/ewecrow78-gif/whitelist1/main/list.txt";
+    
+    // 2. Формируем путь для Happ
+    const payload = "import/" + encodeURIComponent(CONFIG_URL);
+    
+    // 3. Ссылка для Google Play
+    const PLAY_STORE = "https://play.google.com/store/apps/details?id=com.happ.android";
 
-        const a = document.createElement('a');
-        a.href = happLink;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+    // 4. Генерируем Intent специально для Happ (указываем его package)
+    // Это заставит Android игнорировать v2rayNG и искать именно Happ
+    const INTENT = "intent://" + payload + "#Intent;scheme=happ;package=com.happ.android;S.browser_fallback_url=" + encodeURIComponent(PLAY_STORE) + ";end";
 
-        // Если через 5 секунд ничего не открылось, идем в маркет
-        setTimeout(() => {
-            if (document.hasFocus()) {
-                window.location.href = "https://play.google.com/store/apps/details?id=com.happ.android";
-            }
-        }, 5000);
-    }
+    const openBtn = document.getElementById('openBtn');
+    openBtn.href = INTENT;
+
+    // Пытаемся запустить автоматически
+    let aborted = false;
+    ['visibilitychange', 'pagehide', 'blur'].forEach(ev => window.addEventListener(ev, () => aborted = true));
+
+    setTimeout(() => {
+        if (!aborted) {
+            window.location.href = INTENT;
+        }
+    }, 500);
 </script>
 
 </body>
