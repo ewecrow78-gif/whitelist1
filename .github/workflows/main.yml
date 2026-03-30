@@ -19,76 +19,84 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Download, Ping Check and Combine
+      - name: Process Configs
         run: |
-          # 1. Скачиваем конфиги из всех источников
-          # Источник 1: igareck
-          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
-          # Источник 2: zieng2
-          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
-          # Источник 3: FLEXIY0 (Matryoshka WhiteList)
-          curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
+          # 1. Сбор данных из источников
+          curl -sL --max-time 15 "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
+          curl -sL --max-time 15 "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
+          curl -sL --max-time 15 "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           
-          # Удаляем дубликаты
-          sort -u raw_list.txt -o raw_list.txt
-
-          # 2. Ускоренный Python-скрипт (50 потоков)
+          # 2. Мощный Python-фильтр с переименованием
           python3 - <<EOF
           import socket
           import re
+          import base64
+          import json
+          import urllib.parse
           from concurrent.futures import ThreadPoolExecutor
 
-          def check_link(link):
-              link = link.strip()
-              if not link: return None
-              
-              # Регулярка для извлечения хоста и порта
-              match = re.search(r'@([^:/?#\s]+):(\d+)', link)
-              if not match:
-                  return link
-              
-              host, port = match.group(1), int(match.group(2))
+          def get_host_port(link):
               try:
-                  # Попытка установить TCP-соединение за 3 секунды
-                  with socket.create_connection((host, port), timeout=3):
+                  if link.startswith('vmess://'):
+                      data = json.loads(base64.b64decode(link[8:]).decode('utf-8'))
+                      return data.get('add'), int(data.get('port')), 'vmess'
+                  match = re.search(r'@([^:/?#\s]+):(\d+)', link)
+                  if match:
+                      return match.group(1), int(match.group(2)), 'other'
+              except: pass
+              return None, None, None
+
+          def check_link(link):
+              host, port, type = get_host_port(link)
+              if not host or not port: return None
+              try:
+                  # Проверка TCP соединения
+                  with socket.create_connection((host, port), timeout=2.0):
                       return link
               except:
                   return None
 
+          def rename_link(link, index):
+              new_name = f"🏳️ Gh0st_WhiteList #{index}"
+              encoded_name = urllib.parse.quote(new_name)
+              
+              if link.startswith('vmess://'):
+                  try:
+                      data = json.loads(base64.b64decode(link[8:]).decode('utf-8'))
+                      data['ps'] = new_name # Меняем поле ps в JSON
+                      new_json = json.dumps(data).encode('utf-8')
+                      return "vmess://" + base64.b64encode(new_json).decode('utf-8')
+                  except: return link
+              
+              # Для vless/ss/trojan меняем всё, что после #
+              if '#' in link:
+                  base = link.split('#')[0]
+                  return f"{base}#{encoded_name}"
+              return f"{link}#{encoded_name}"
+
           with open('raw_list.txt', 'r') as f:
-              links = f.readlines()
+              unique_links = list(set(l.strip() for l in f if l.strip()))
 
-          with ThreadPoolExecutor(max_workers=50) as executor:
-              results = list(executor.map(check_link, links))
+          # Фильтрация (проверка на "живучесть")
+          with ThreadPoolExecutor(max_workers=60) as executor:
+              valid_links = list(filter(None, executor.map(check_link, unique_links)))
 
-          # Сохраняем только "живые" конфиги
-          alive_configs = [r for r in results if r]
+          # Переименование по порядку
+          final_configs = [rename_link(link, i+1) for i, link in enumerate(valid_links)]
 
           with open('clean_configs.txt', 'w') as f:
-              f.write('\n'.join(alive_configs))
+              f.write('\n'.join(final_configs))
           EOF
 
-          # 3. Собираем статистику
+          # 3. Финальная сборка файла
           COUNT=$(wc -l < clean_configs.txt)
-          DATE=$(TZ="Europe/Moscow" date +"%Y-%m-%d / %H:%M")
-
-          # 4. Формируем финальный файл list.txt
-          echo "# profile-title: 🏳️ Gh0st_WhiteList 🏳️ " > list.txt
-          echo "# profile-update-interval: 1" >> list.txt
-          echo "# Date/Time: $DATE (Moscow)" >> list.txt
-          echo "# Количество рабочих: $COUNT" >> list.txt
-          echo "# Источники: igareck, zieng2, FLEXIY0 (Matryoshka)" >> list.txt
-          echo "" >> list.txt
-          cat clean_configs.txt >> list.txt
-
-          # Чистим временные файлы
-          rm raw_list.txt clean_configs.txt
-
-      - name: Commit and Push
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "action@github.com"
-          git add list.txt
-          # Пушим только если есть изменения
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update configs ($(TZ="Europe/Moscow" date +"%H:%M"))" && git push)
-
+          DATE=$(TZ="Europe/Moscow" date +"%d.%m.%Y %H:%M")
+          
+          {
+            echo "# profile-title: 🏳️ Gh0st_WhiteList 🏳️"
+            echo "# profile-update-interval: 1"
+            echo "# Subscription-Userinfo: upload=0; download=0; total=0; expire=0"
+            echo "# Last Update: $DATE (MSK). Рабочих серверов: $COUNT"
+            echo ""
+            cat clean_configs.txt
+          } > list.txt
