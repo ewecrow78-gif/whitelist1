@@ -2,14 +2,14 @@ name: Update My Configs
 
 on:
   schedule:
-    - cron: '0 * * * *' # Запуск каждый час
-  workflow_dispatch:
+    - cron: '0 * * * *' # Каждый час
+  workflow_dispatch: # Кнопка для ручного запуска
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Даем права на запись
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,16 +17,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Process Configs
         run: |
-          # 1. Сбор данных из источников
+          # 1. Сбор данных
           curl -sL --max-time 15 "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
           curl -sL --max-time 15 "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           curl -sL --max-time 15 "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           
-          # 2. Мощный Python-фильтр с переименованием
+          # 2. Python скрипт (мощная фильтрация и переименование)
           python3 - <<EOF
           import socket
           import re
@@ -39,64 +39,55 @@ jobs:
               try:
                   if link.startswith('vmess://'):
                       data = json.loads(base64.b64decode(link[8:]).decode('utf-8'))
-                      return data.get('add'), int(data.get('port')), 'vmess'
+                      return data.get('add'), int(data.get('port'))
                   match = re.search(r'@([^:/?#\s]+):(\d+)', link)
                   if match:
-                      return match.group(1), int(match.group(2)), 'other'
+                      return match.group(1), int(match.group(2))
               except: pass
-              return None, None, None
+              return None, None
 
           def check_link(link):
-              host, port, type = get_host_port(link)
+              host, port = get_host_port(link)
               if not host or not port: return None
               try:
-                  # Проверка TCP соединения
-                  with socket.create_connection((host, port), timeout=2.0):
+                  with socket.create_connection((host, port), timeout=2.5):
                       return link
-              except:
-                  return None
+              except: return None
 
           def rename_link(link, index):
-              new_name = f"🏳️ Gh0st_WhiteList #{index}"
-              encoded_name = urllib.parse.quote(new_name)
-              
+              new_name = f"Gh0st_WhiteList #{index}"
               if link.startswith('vmess://'):
                   try:
                       data = json.loads(base64.b64decode(link[8:]).decode('utf-8'))
-                      data['ps'] = new_name # Меняем поле ps в JSON
-                      new_json = json.dumps(data).encode('utf-8')
-                      return "vmess://" + base64.b64encode(new_json).decode('utf-8')
+                      data['ps'] = new_name
+                      return "vmess://" + base64.b64encode(json.dumps(data).encode('utf-8')).decode('utf-8')
                   except: return link
               
-              # Для vless/ss/trojan меняем всё, что после #
-              if '#' in link:
-                  base = link.split('#')[0]
-                  return f"{base}#{encoded_name}"
-              return f"{link}#{encoded_name}"
+              # Для vless/ss/trojan - удаляем старое название и ставим новое
+              base = link.split('#')[0]
+              return f"{base}#{urllib.parse.quote(new_name)}"
 
           with open('raw_list.txt', 'r') as f:
-              unique_links = list(set(l.strip() for l in f if l.strip()))
+              # Убираем дубликаты сразу
+              unique_links = list(dict.fromkeys([l.strip() for l in f if l.strip()]))
 
-          # Фильтрация (проверка на "живучесть")
-          with ThreadPoolExecutor(max_workers=60) as executor:
+          with ThreadPoolExecutor(max_workers=50) as executor:
               valid_links = list(filter(None, executor.map(check_link, unique_links)))
 
-          # Переименование по порядку
+          # Переименовываем по порядку
           final_configs = [rename_link(link, i+1) for i, link in enumerate(valid_links)]
 
-          with open('clean_configs.txt', 'w') as f:
+          with open('list.txt', 'w') as f:
+              # Заголовок для клиента
+              f.write("# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
+              f.write(f"# Updated: $(date)\n\n")
               f.write('\n'.join(final_configs))
           EOF
 
-          # 3. Финальная сборка файла
-          COUNT=$(wc -l < clean_configs.txt)
-          DATE=$(TZ="Europe/Moscow" date +"%d.%m.%Y %H:%M")
-          
-          {
-            echo "# profile-title: 🏳️ Gh0st_WhiteList 🏳️"
-            echo "# profile-update-interval: 1"
-            echo "# Subscription-Userinfo: upload=0; download=0; total=0; expire=0"
-            echo "# Last Update: $DATE (MSK). Рабочих серверов: $COUNT"
-            echo ""
-            cat clean_configs.txt
-          } > list.txt
+      - name: Commit and Push
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git add list.txt
+          # Принудительно коммитим, если файл изменился
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update configs" && git push)
