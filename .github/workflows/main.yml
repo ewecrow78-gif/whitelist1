@@ -21,12 +21,12 @@ jobs:
 
       - name: Process Configs
         run: |
-          # 1. Сбор данных из всех твоих источников
+          # 1. Сбор данных
           curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
           curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
 
-          # 2. Python-скрипт (Фильтрация, Проверка, Ссылки, Лимиты)
+          # 2. Python-скрипт
           python3 - <<EOF
           import socket, re, base64, json, time, urllib.parse, os
           from concurrent.futures import ThreadPoolExecutor
@@ -62,7 +62,6 @@ jobs:
               res = list(filter(None, ex.map(check, u)))
           res.sort(key=lambda x: x[1])
 
-          # --- ТВОИ ССЫЛКИ ---
           tg_channel = "https://t.me/whitelistGh0st"
           repo_url = "https://github.com/ewecrow78-gif/whitelist1"
           
@@ -78,9 +77,9 @@ jobs:
               elif '#' in link:
                   old_name = urllib.parse.unquote(link.split('#')[1])
               
-              f_flags = FLAGS_RE.findall(old_name)
-              icon = f_flags[0] if f_flags else "🌐"
-              new_ps = f"{icon} Gh0st #{i+1}"
+              found_flags = FLAGS_RE.findall(old_name)
+              icon = found_flags[0] if found_flags else "🌐"
+              new_ps = f"{icon} Gh0st_WhiteList #{i+1}" # Вот исправленная строка
 
               if link.startswith('vmess://'):
                   d = decode_vmess(link[8:])
@@ -91,17 +90,12 @@ jobs:
                   clean_url = link.split('#')[0]
                   final.append(f"{clean_url}#{urllib.parse.quote(new_ps)}")
 
-                  # 3. ЗАПИСЬ В ФАЙЛ (С привязкой GitHub к иконке инфо)
+          # --- ВАЖНО: ЗАПИСЬ ВНЕ ЦИКЛА (на одном уровне с for) ---
           with open('list.txt', 'w', encoding='utf-8') as f:
-              # Название подписки
               f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
-              # Ссылка на GitHub (привязывается к знаку '!')
               f.write(f"# profile-web-page: {repo_url}\n")
-              # Ссылка на Telegram (кнопка поддержки)
               f.write(f"# support-url: {tg_channel}\n")
-              # Интервал обновления (1 день)
               f.write(f"# profile-update-interval: 1\n")
-              # Шкала на 777 ТБ
               f.write(f"# subscription-userinfo: upload=0; download=0; total=854347202560000; expire=0\n")
               f.write(f"# Всего рабочих: {len(res)}\n\n")
               f.write('\n'.join(final))
