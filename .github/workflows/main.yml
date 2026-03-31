@@ -22,13 +22,13 @@ jobs:
       - name: Process Configs
         run: |
           # 1. Сбор данных
-          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
-          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
-          curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
+          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || f_status=1
+          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || f_status=1
+          curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || f_status=1
 
-          # 2. Python-скрипт (Только сбор и переименование)
+          # 2. Python-скрипт (БЕЗ ПРОВЕРКИ, ТОЛЬКО ПЕРЕИМЕНОВАНИЕ)
           python3 - <<EOF
-          import re, base64, json, urllib.parse, os
+          import re, base64, json, urllib.parse
 
           FLAGS_RE = re.compile(r'[\U0001F1E6-\U0001F1FF]{2}')
 
@@ -37,37 +37,43 @@ jobs:
               except: return None
 
           with open('raw_list.txt', 'r') as f:
-              u = list(dict.fromkeys([line.strip() for line in f if line.strip()]))
+              unique_links = list(dict.fromkeys([line.strip() for line in f if line.strip()]))
 
           tg_channel = "https://t.me/whitelistGh0st"
-          repo_url = "https://github.com/ewecrow78-gif/whitelist1 "
+          repo_url = "https://github.com"
           
           final = []
-          info_label = f"📢 TG: @whitelistGh0st | {len(u)} Configs"
+          # Рекламная строка
+          info_label = f"📢 TG: @whitelistGh0st | {len(unique_links)} Configs"
           final.append(f"vless://ghost@127.0.0.1:443?encryption=none&security=none#{urllib.parse.quote(info_label)}")
 
-          for i, link in enumerate(u):
+          for i, link in enumerate(unique_links):
+              # Извлекаем старое имя для поиска флага
               old_name = ""
               if link.startswith('vmess://'):
                   d = decode_vmess(link[8:])
                   if d: old_name = d.get('ps', '')
               elif '#' in link:
-                  parts = link.split('#')
-                  old_name = urllib.parse.unquote(parts[1]) if len(parts) > 1 else ""
+                  old_name = urllib.parse.unquote(link.split('#')[-1])
               
-              f_flags = FLAGS_RE.findall(old_name)
-              icon = f_flags[0] if f_flags else "🌐"
+              # Формируем иконку и новое имя
+              found_flags = FLAGS_RE.findall(old_name)
+              icon = found_flags[0] if found_flags else "🌐"
               new_ps = f"{icon} Gh0st_WhiteList #{i+1}"
 
+              # Собираем ссылку обратно
               if link.startswith('vmess://'):
                   d = decode_vmess(link[8:])
                   if d:
                       d['ps'] = new_ps
-                      final.append("vmess://" + base64.b64encode(json.dumps(d).encode('utf-8')).decode('utf-8'))
+                      new_link = "vmess://" + base64.b64encode(json.dumps(d).encode('utf-8')).decode('utf-8')
+                      final.append(new_link)
               else:
-                  clean_url = link.split('#')[0]
-                  final.append(f"{clean_url}#{urllib.parse.quote(new_ps)}")
+                  # Берем часть до решетки и приклеиваем новое имя
+                  base_part = link.split('#')[0]
+                  final.append(f"{base_part}#{urllib.parse.quote(new_ps)}")
 
+          # 3. Запись в файл
           with open('list.txt', 'w', encoding='utf-8') as f:
               f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
               f.write(f"# profile-web-page: {repo_url}\n")
