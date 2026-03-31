@@ -1,5 +1,5 @@
 # profile-title: 🏳️ Gh0st_WhiteList 🏳️
-# profile-web-page: https://github.com/ewecrow78-gif/whitelist1 
+# profile-web-page: https://github.com
 # support-url: https://t.me/whitelistGh0st
 # profile-update-interval: 1
 # subscription-userinfo: upload=0; download=0; total=854347202560000; expire=0
