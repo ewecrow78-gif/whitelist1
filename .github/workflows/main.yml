@@ -26,7 +26,7 @@ jobs:
           curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
 
-          # 2. Python-скрипт (ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ)
+          # 2. Python-скрипт с улучшенной сортировкой и очисткой
           python3 - <<EOF
           import socket, re, base64, json, time, urllib.parse, os
           from concurrent.futures import ThreadPoolExecutor
@@ -51,57 +51,69 @@ jobs:
               if not h: return None
               try:
                   s = time.time()
-                  with socket.create_connection((h, p), timeout=2.5):
-                      return (l, int((time.time()-s)*1000))
+                  # Увеличиваем таймаут до 3.0 для стабильности на больших списках
+                  with socket.create_connection((h, p), timeout=3.0):
+                      ms = int((time.time()-s)*1000)
+                      return (l, ms, h) # Возвращаем ссылку, пинг и хост для дедупликации
               except: return None
 
+          # Читаем сырые данные
           with open('raw_list.txt', 'r') as f:
               u = list(dict.fromkeys([line.strip() for line in f if line.strip()]))
 
+          # Проверка в 100 потоков
           with ThreadPoolExecutor(max_workers=100) as ex:
-              res = list(filter(None, ex.map(check, u)))
-          res.sort(key=lambda x: x[1])
+              checked_stuff = list(filter(None, ex.map(check, u)))
+
+          # СОРТИРОВКА И ДЕДУПЛИКАЦИЯ
+          # 1. Сортируем по пингу (от меньшего к большему)
+          checked_stuff.sort(key=lambda x: x[1])
+
+          final_res = []
+          seen_hosts = set()
+
+          for link, ms, host in checked_stuff:
+              # Если такой IP уже есть в списке — пропускаем (экономим место и память телефона)
+              if host in seen_hosts:
+                  continue
+              seen_hosts.add(host)
+              final_res.append(link)
 
           tg_channel = "https://t.me/whitelistGh0st"
-          repo_url = "https://github.com"
+          repo_url = "https://github.com/ewecrow78-gif/whitelist1" # Твой репо
           
-          final = []
-          info_label = f"📢 TG: @whitelistGh0st | {len(res)} Online"
-          final.append(f"vless://ghost@127.0.0.1:443?encryption=none&security=none#{urllib.parse.quote(info_label)}")
+          final_configs = []
+          # Инфо-плашка в начале списка
+          info_label = f"📢 TG: @whitelistGh0st | {len(final_res)} Unique Online"
+          final_configs.append(f"vless://ghost@127.0.0.1:443?encryption=none&security=none#{urllib.parse.quote(info_label)}")
 
-          for i, (link, _) in enumerate(res):
-              old_name = ""
-              if link.startswith('vmess://'):
-                  d = decode_vmess(link[8:])
-                  if d: old_name = d.get('ps', '')
-              elif '#' in link:
-                  parts = link.split('#')
-                  old_name = urllib.parse.unquote(parts[1]) if len(parts) > 1 else ""
-              
-              f_flags = FLAGS_RE.findall(old_name)
-              icon = f_flags[0] if f_flags else "🌐"
-              new_ps = f"{icon} Gh0st_WhiteList #{i+1}"
+          for i, link in enumerate(final_res):
+              # Генерируем максимально легкое имя (чтобы v2rayNG не вис на отрисовке)
+              new_ps = f"🌐 Gh0st #{i+1}"
 
               if link.startswith('vmess://'):
                   d = decode_vmess(link[8:])
                   if d:
                       d['ps'] = new_ps
-                      final.append("vmess://" + base64.b64encode(json.dumps(d).encode('utf-8')).decode('utf-8'))
+                      # Очищаем от лишних полей, которые могут содержать "мусор"
+                      essential = ["v","ps","add","port","id","aid","net","type","host","path","tls","sni","alpn"]
+                      clean_d = {k: v for k, v in d.items() if k in essential}
+                      final_configs.append("vmess://" + base64.b64encode(json.dumps(clean_d).encode('utf-8')).decode('utf-8'))
               else:
+                  # Для VLESS/SS/Trojan отрезаем старое имя и ставим новое
                   clean_url = link.split('#')[0]
-                  final.append(f"{clean_url}#{urllib.parse.quote(new_ps)}")
+                  final_configs.append(f"{clean_url}#{urllib.parse.quote(new_ps)}")
 
           with open('list.txt', 'w', encoding='utf-8') as f:
               f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
               f.write(f"# profile-web-page: {repo_url}\n")
               f.write(f"# support-url: {tg_channel}\n")
               f.write(f"# profile-update-interval: 1\n")
-              f.write(f"# subscription-userinfo: upload=0; download=0; total=854347202560000; expire=0\n")
-              f.write(f"# Всего рабочих: {len(res)}\n\n")
-              f.write('\n'.join(final))
+              f.write(f"# Всего уникальных рабочих: {len(final_res)}\n\n")
+              f.write('\n'.join(final_configs))
 
           with open('status.json', 'w', encoding='utf-8') as f:
-              json.dump({"count": f"{len(res)} рабочих"}, f)
+              json.dump({"count": f"{len(final_res)} уникальных рабочих"}, f)
           EOF
 
       - name: Commit and Push
