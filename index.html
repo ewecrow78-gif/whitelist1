@@ -1,55 +1,59 @@
 <!doctype html>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Opening Happ…</title>
-<style>
-  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif; padding: 24px; line-height: 1.5; }
-  .box { max-width: 720px; margin: auto; }
-  .muted { opacity: .7; }
-  .btn { display: inline-block; padding: .6rem 1rem; border-radius: .6rem; border: 1px solid #ccc; text-decoration: none; color: #000; }
-</style>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Подключение к Happ...</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; padding: 40px 20px; line-height: 1.5; text-align: center; background: #f9f9f9; }
+        .box { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { font-size: 22px; margin-bottom: 10px; color: #333; }
+        .muted { color: #666; font-size: 14px; margin-bottom: 30px; }
+        .btn { display: block; padding: 12px 20px; border-radius: 12px; background: #007AFF; color: white; text-decoration: none; font-weight: 600; margin-bottom: 10px; transition: opacity 0.2s; }
+        .btn-secondary { background: #f0f0f0; color: #333; border: 1px solid #ddd; }
+        .btn:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
 
 <div class="box">
-  <h1>Открываем Happ…</h1>
-  <p class="muted">Если не открылось автоматически — нажмите кнопку ниже.</p>
-  <p><a id="open" class="btn" href="#" rel="noopener">Открыть в Happ</a></p>
-  <p><a id="store" class="btn" href="#" rel="noopener" style="display:none">Открыть магазин</a></p>
+    <h1>Открываем Happ…</h1>
+    <p class="muted">Конфигурация загружается автоматически. Если этого не произошло, нажмите кнопку ниже.</p>
+    
+    <a id="openBtn" class="btn" href="#">Открыть в приложении</a>
+    <a id="storeBtn" class="btn btn-secondary" href="#" style="display:none">Установить Happ</a>
 </div>
 
 <script>
-  // Ваша новая ссылка
-  const RAW = "happ://crypt4/rkwiNPe9LxEm9PbM2r15Pl9NvG0DlPZ1SCpmGNdVWDvwRkwj+hmcQEcuwk5OOinb4yDoXhpUJolsOwcl9dbudz4zigB8h1MiLIui+TIS3Zq3L8tdm7XgjE0tfAqnyf6udsyeK2BTNac4Hv+1L/fNuLgCL/xZ+Dy5zUDGUB7M==Ogrwd+75twA3/2PWJNMLDiDIh4mnmE2rY+ FASoPYO9wqEyNPC3YD3YXJqhfEO9sjhEiKiveFDoNQDBbqnVyX4W81gwLsNWzBZCw1I+BVfpzbP2D3qOg194gLV01g/MnsqmIEVCKRDXlYEou YkqDhWSnOq+OHWF8uOnVn5gEWLks0rA3bWxjOI2x6IUZEwThPzaQk13AYvvy7kPfzMqcf5ALq/mXO8dNtYOITjQm9oJAHSuFeGTq4UBXJI+5A PDd120kHER7wCYVAYgNSq+FXmeGxQgaHquweJs/fQonGhpCuexzPcI45pu3KZgZ+fu5kTRCNAIc28TvfIvU9P90vVBMfTPIOY4X5y9fz3LAwugKO1RisGIz/WYpMUb1+Vj9LvmSM3nB3OU9AYRFdEY22k1ekfLc6KVKASJejy2A6Us9azfnjkbu2LMlg/UrLxwdGkMoTGdA4DlGkNzxx2PUwLc EHDNJYfr6eeyrXYpCsX0cU6KdGkkRQS2f8DbijvW50rOL6gN8h9BeGbVB3Atw9SX8Q5/M1W2JCJUM7K6IN2tyJfA40qc/N+zdHStrrutWCu4t HJveYMOa3QAS/rt4lJAAOzZpszRzUXB2bueI3+Nk9XB/Lb8cAk0TNplD/ij6KwB9C0DRQ7BMz8Ei/SukIXH+RVl9+TrHhb8PI+GFOQU=R5ggxl".replace(/\s/g, '');
+    // ЗАМЕНИТЕ ЭТУ ССЫЛКУ НА ВАШУ (полученную в dev-docs)
+    const MY_NEW_LINK = "happ://crypt4/rkwiOzCGNGlGfVy12o157AslZW40pykjOTOtFpaud3N2MfPEqOE6sTpu5MPCWyQjBRqSb0Epn82ajZwjGYBvOHcIEyXCqv72siKpS5WkjVXFZkRxGYWxPNku6WXDkrl5v3C2QwMNXJjgPtApaZkN9vG6rflvr73F99+P/dIz==6Qq1cMSsCWos2OInBMI3M0GULrclgfAIWhUIn3f3mP/oVYqivFhioJGupLPdIHSdQYqJtL7YIVGAbPH5JjkrMnQFF/omE5PBR2IYg2DFV+yiHD0V7ZoASpztZb+1pw0oBbfLK3ZS8cHIuWAbho4pehzyvrHkpCaoIpNmh0iYUYjSj7VTVT+EZnrHzIh/IEicXl2PvJOm5prmdWfAopqIqbgwozQuZp4qe5HmKHm5hDZVXMmKwii7ur+Q9hescJtFaH9ZZ79KwtSESeIsu8IUVrIosB1a7Ak7KWbJzK2CG14AWsn0hjMwJ5gOq0a0i+046CNtKPPaT81pUZQ+rV1jiymdm7V+X88lTIvndcv4UxO6Ukt9SD00nJvR1L2iTjJEQlW2iGZ1dg3UqrEWsENvBiw8MINQY++aFiXl9wh85cz0T5P6Jeb6z3ty9D9+rpcZNfcp2910bp/G1MME+yVOgm/VQOkk2X7QhPhlQKuB5Mhe5hXBdBx1EdmatQC+bs/nLszipdv/R7XB7o8JXGTdcqBY6/oMTZGCHSvaoA9AqGBwsKzg9mLpVgZMoDPq+2KH5MjiBXM3V7/DjofuNR4C5TFKAjEELfi/sC3cvGRU8aFeeJpy8xXaDKtzeoykdynIgxczD18UxKDLrstybdS9HRd0HP7IoMNi0qRtpQv/jz4=QOggxl";
 
-  const ua = navigator.userAgent || '';
-  const isAndroid = /Android/i.test(ua);
+    const ua = navigator.userAgent || '';
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
 
-  // Проверка формата ссылки (поддерживает crypt4 и crypt5)
-  if (!/^happ:\/\/crypt[45]\//i.test(RAW)) {
-    document.body.innerHTML = '<p style="color:#c00">Неверная ссылка.</p>';
-    throw 0;
-  }
+    const PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.happproxy';
+    const APP_STORE = 'https://apps.apple.com/app/id6504287215';
 
-  const PLAY = 'https://play.google.com/store/apps/details?id=com.happproxy';
-  const APPSTORE = 'https://apps.apple.com/app/id6504287215';
+    const openBtn = document.getElementById('openBtn');
+    const storeBtn = document.getElementById('storeBtn');
 
-  const payload = RAW.replace(/^happ:\/\//i, '');
-  const INTENT = 'intent://' + payload + '#Intent;scheme=happ;package=com.happproxy;S.browser_fallback_url=' + encodeURIComponent(PLAY) + ';end';
+    // Настройка ссылок
+    if (isAndroid) {
+        const payload = MY_NEW_LINK.replace(/^happ:\/\//i, '');
+        // Intent для Android, чтобы при отсутствии приложения кидало в Маркет
+        openBtn.href = `intent://${payload}#Intent;scheme=happ;package=com.happproxy;S.browser_fallback_url=${encodeURIComponent(PLAY_STORE)};end`;
+    } else {
+        openBtn.href = MY_NEW_LINK;
+        storeBtn.href = isIOS ? APP_STORE : PLAY_STORE;
+        storeBtn.style.display = 'block';
+    }
 
-  const openBtn = document.getElementById('open');
-  const storeBtn = document.getElementById('store');
-
-  openBtn.href = isAndroid ? INTENT : RAW;
-  storeBtn.href = isAndroid ? PLAY : APPSTORE;
-
-  if (!isAndroid) storeBtn.style.display = 'inline-block';
-
-  let cancelled = false;
-  ['visibilitychange', 'pagehide', 'blur'].forEach(ev => {
-    addEventListener(ev, () => { cancelled = true }, { once: true });
-  });
-
-  // Автоматический переход
-  setTimeout(() => {
-    if (!cancelled) location.href = openBtn.href;
-  }, 80);
+    // Автоматический переход
+    setTimeout(() => {
+        window.location.href = openBtn.href;
+    }, 500);
 </script>
+
+</body>
+</html>
