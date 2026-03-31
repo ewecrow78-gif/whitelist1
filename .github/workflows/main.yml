@@ -91,13 +91,18 @@ jobs:
                   clean_url = link.split('#')[0]
                   final.append(f"{clean_url}#{urllib.parse.quote(new_ps)}")
 
-          # 3. ЗАПИСЬ В ФАЙЛ (total = 777 ТБ)
+                  # 3. ЗАПИСЬ В ФАЙЛ (С привязкой GitHub к иконке инфо)
           with open('list.txt', 'w', encoding='utf-8') as f:
+              # Название подписки
               f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
-              f.write(f"# profile-update-interval: 1\n")
-              f.write(f"# subscription-userinfo: upload=0; download=0; total=854347202560000; expire=0\n")
-              f.write(f"# support-url: {tg_channel}\n")
+              # Ссылка на GitHub (привязывается к знаку '!')
               f.write(f"# profile-web-page: {repo_url}\n")
+              # Ссылка на Telegram (кнопка поддержки)
+              f.write(f"# support-url: {tg_channel}\n")
+              # Интервал обновления (1 день)
+              f.write(f"# profile-update-interval: 1\n")
+              # Шкала на 777 ТБ
+              f.write(f"# subscription-userinfo: upload=0; download=0; total=854347202560000; expire=0\n")
               f.write(f"# Всего рабочих: {len(res)}\n\n")
               f.write('\n'.join(final))
 
