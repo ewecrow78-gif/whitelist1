@@ -25,20 +25,22 @@ jobs:
           curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
           curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
-          curl -sL "https://raw.githubusercontent.com/vfarid/v2ray-share/main/all.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
-
-          # 2. Python-скрипт (Фильтрация + JSON для бейджа)
+                   # 2. Python-скрипт (Фильтрация + JSON + Ссылки)
           python3 - <<EOF
           import socket, re, base64, json, time, urllib.parse, os
           from concurrent.futures import ThreadPoolExecutor
 
           FLAGS_RE = re.compile(r'[\U0001F1E6-\U0001F1FF]{2}')
 
+          def decode_vmess(s):
+              try: return json.loads(base64.b64decode(s + '=' * (-len(s) % 4)).decode('utf-8'))
+              except: return None
+
           def get_hp(l):
               try:
                   if l.startswith('vmess://'):
-                      d = json.loads(base64.b64decode(l[8:]).decode('utf-8'))
-                      return d.get('add'), int(d.get('port'))
+                      d = decode_vmess(l[8:])
+                      return (d.get('add'), int(d.get('port'))) if d else (None, None)
                   m = re.search(r'@([^:/?#\s]+):(\d+)', l)
                   return (m.group(1), int(m.group(2))) if m else (None, None)
               except: return None, None
@@ -60,29 +62,49 @@ jobs:
           res.sort(key=lambda x: x[1])
 
           final = []
+          # Настройки ссылок
+          tg_channel = "https://t.me" # ЗАМЕНИТЕ НА СВОЙ
+          repo_url = "https://github.com" # ЗАМЕНИТЕ НА СВОЙ
+          
+          # 1. Добавляем информационную заглушку в начало списка
+          info_label = f"📢 TG: @{tg_channel.split('/')[-1]} | {len(res)} Online"
+          final.append(f"vless://ghost@127.0.0.1:443?encryption=none&security=none#{urllib.parse.quote(info_label)}")
+
+          # 2. Обработка основных конфигов
           for i, (link, _) in enumerate(res):
               name = ""
               if link.startswith('vmess://'):
-                  try: name = json.loads(base64.b64decode(link[8:]).decode('utf-8')).get('ps', '')
-                  except: pass
-              elif '#' in link: name = urllib.parse.unquote(link.split('#')[1])
+                  d = decode_vmess(link[8:])
+                  name = d.get('ps', '') if d else ""
+              elif '#' in link: 
+                  name = urllib.parse.unquote(link.split('#')[1])
+              
               f_icon = (FLAGS_RE.findall(name) or ["🌐"])[0]
-              new_ps = f"{f_icon} Gh0st_WhiteList #{i+1}"
+              new_ps = f"{f_icon} Gh0st #{i+1}"
+
               if link.startswith('vmess://'):
-                  d = json.loads(base64.b64decode(link[8:]).decode('utf-8'))
-                  d['ps'] = new_ps
-                  final.append("vmess://" + base64.b64encode(json.dumps(d).encode('utf-8')).decode('utf-8'))
+                  d = decode_vmess(link[8:])
+                  if d:
+                      d['ps'] = new_ps
+                      final.append("vmess://" + base64.b64encode(json.dumps(d).encode('utf-8')).decode('utf-8'))
               else:
                   final.append(f"{link.split('#')[0]}#{urllib.parse.quote(new_ps)}")
 
-          # 1. Запись в list.txt (для Happ и v2ray)
+          # 3. Запись в list.txt с метаданными
+          # total = 854347202560000 байт (~777 ТБ)
           with open('list.txt', 'w', encoding='utf-8') as f:
               f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
               f.write(f"# profile-update-interval: 1\n")
-              f.write(f"# subscription-userinfo: upload=0; download=0; total=107374182400; expire=0\n")
-              f.write(f"# Всего рабочих: {len(final)}\n\n")
+              f.write(f"# subscription-userinfo: upload=0; download=0; total=854347202560000; expire=0\n")
+              f.write(f"# support-url: {tg_channel}\n")
+              f.write(f"# profile-web-page: {repo_url}\n")
+              f.write(f"# Всего рабочих: {len(res)}\n\n")
               f.write('\n'.join(final))
 
+          with open('status.json', 'w', encoding='utf-8') as f:
+              json.dump({"count": f"{len(res)} рабочих"}, f)
+          EOF
+          
           # 2. Создание JSON для бейджа (ВАЖНО)
           with open('status.json', 'w', encoding='utf-8') as f:
               json.dump({"count": f"{len(final)} рабочих"}, f)
