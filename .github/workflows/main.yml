@@ -75,11 +75,12 @@ jobs:
                   d = decode_vmess(link[8:])
                   if d: old_name = d.get('ps', '')
               elif '#' in link:
-                  old_name = urllib.parse.unquote(link.split('#')[1])
+                  parts = link.split('#')
+                  old_name = urllib.parse.unquote(parts[1]) if len(parts) > 1 else ""
               
-              found_flags = FLAGS_RE.findall(old_name)
-              icon = found_flags[0] if found_flags else "🌐"
-              new_ps = f"{icon} Gh0st_WhiteList #{i+1}" # Вот исправленная строка
+              f_flags = FLAGS_RE.findall(old_name)
+              icon = f_flags[0] if f_flags else "🌐"
+              new_ps = f"{icon} Gh0st_WhiteList #{i+1}"
 
               if link.startswith('vmess://'):
                   d = decode_vmess(link[8:])
@@ -87,10 +88,10 @@ jobs:
                       d['ps'] = new_ps
                       final.append("vmess://" + base64.b64encode(json.dumps(d).encode('utf-8')).decode('utf-8'))
               else:
+                  # ИСПРАВЛЕНО: берем только адрес до знака #
                   clean_url = link.split('#')[0]
                   final.append(f"{clean_url}#{urllib.parse.quote(new_ps)}")
 
-          # --- ВАЖНО: ЗАПИСЬ ВНЕ ЦИКЛА (на одном уровне с for) ---
           with open('list.txt', 'w', encoding='utf-8') as f:
               f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
               f.write(f"# profile-web-page: {repo_url}\n")
