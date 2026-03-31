@@ -26,7 +26,7 @@ jobs:
           curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
 
-          # 2. Python-скрипт (Умная фильтрация с проверкой порта и DNS-пингом)
+          # 2. Python-скрипт (Топ-200, Без пинга в названии)
           python3 - <<EOF
           import socket, re, base64, json, time, urllib.parse
           from concurrent.futures import ThreadPoolExecutor
@@ -50,9 +50,8 @@ jobs:
               h, p = get_hp(l)
               if not h: return None
               try:
-                  # Увеличиваем таймаут до 4 секунд как у jsxta
                   start = time.time()
-                  with socket.create_connection((h, p), timeout=4.0):
+                  with socket.create_connection((h, p), timeout=3.5):
                       latency = int((time.time() - start) * 1000)
                       return (l, latency)
               except: return None
@@ -60,31 +59,36 @@ jobs:
           with open('raw_list.txt', 'r') as f:
               u = list(dict.fromkeys([line.strip() for line in f if line.strip()]))
 
-          # Проверяем в 100 потоков
           with ThreadPoolExecutor(max_workers=100) as ex:
               res = list(filter(None, ex.map(check, u)))
           
-          # Сортируем: самые быстрые (низкий пинг) в начале
+          # Сортировка по задержке (быстрые вверху)
           res.sort(key=lambda x: x[1])
+
+          # БЕРЕМ ТОЛЬКО ТОП-200
+          top_res = res[:200]
 
           tg_channel = "https://t.me/whitelistGh0st"
           repo_url = "https://github.com"
           
           final = []
-          info_label = f"📢 TG: @whitelistGh0st | {len(res)} Online"
+          info_label = f"📢 TG: @whitelistGh0st | {len(top_res)} Online"
           final.append(f"vless://ghost@127.0.0.1:443?encryption=none&security=none#{urllib.parse.quote(info_label)}")
 
-          for i, (link, latency) in enumerate(res):
+          for i, (link, _) in enumerate(top_res):
               old_name = ""
               if link.startswith('vmess://'):
                   d = decode_vmess(link[8:])
                   if d: old_name = d.get('ps', '')
               elif '#' in link:
-                  old_name = urllib.parse.unquote(link.split('#')[-1])
+                  parts = link.split('#')
+                  old_name = urllib.parse.unquote(parts[1]) if len(parts) > 1 else ""
               
-              icon = (FLAGS_RE.findall(old_name) or ["🌐"])[0]
-              # Добавляем пинг в название для наглядности (как у профи)
-              new_ps = f"{icon} Gh0st_WL | {latency}ms | #{i+1}"
+              f_flags = FLAGS_RE.findall(old_name)
+              icon = f_flags[0] if f_flags else "🌐"
+              
+              # Чистое название без задержки в ms
+              new_ps = f"{icon} Gh0st_WhiteList #{i+1}"
 
               if link.startswith('vmess://'):
                   d = decode_vmess(link[8:])
@@ -92,8 +96,8 @@ jobs:
                       d['ps'] = new_ps
                       final.append("vmess://" + base64.b64encode(json.dumps(d).encode('utf-8')).decode('utf-8'))
               else:
-                  base_url = link.split('#')[0]
-                  final.append(f"{base_url}#{urllib.parse.quote(new_ps)}")
+                  clean_url = link.split('#')[0]
+                  final.append(f"{clean_url}#{urllib.parse.quote(new_ps)}")
 
           with open('list.txt', 'w', encoding='utf-8') as f:
               f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
@@ -101,11 +105,11 @@ jobs:
               f.write(f"# support-url: {tg_channel}\n")
               f.write(f"# profile-update-interval: 1\n")
               f.write(f"# subscription-userinfo: upload=0; download=0; total=854347202560000; expire=0\n")
-              f.write(f"# Всего рабочих: {len(res)}\n\n")
+              f.write(f"# Всего в топе: {len(top_res)}\n\n")
               f.write('\n'.join(final))
 
           with open('status.json', 'w', encoding='utf-8') as f:
-              json.dump({"count": f"{len(res)} рабочих"}, f)
+              json.dump({"count": f"{len(top_res)} рабочих"}, f)
           EOF
 
       - name: Commit and Push
