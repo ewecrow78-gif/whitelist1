@@ -26,9 +26,10 @@ jobs:
           curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
           curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
 
-          # 2. Python-скрипт (Только сбор и переименование)
+          # 2. Python-скрипт (ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ)
           python3 - <<EOF
-          import re, base64, json, urllib.parse, os
+          import socket, re, base64, json, time, urllib.parse, os
+          from concurrent.futures import ThreadPoolExecutor
 
           FLAGS_RE = re.compile(r'[\U0001F1E6-\U0001F1FF]{2}')
 
@@ -36,17 +37,39 @@ jobs:
               try: return json.loads(base64.b64decode(s + '=' * (-len(s) % 4)).decode('utf-8'))
               except: return None
 
+          def get_hp(l):
+              try:
+                  if l.startswith('vmess://'):
+                      d = decode_vmess(l[8:])
+                      return (d.get('add'), int(d.get('port'))) if d else (None, None)
+                  m = re.search(r'@([^:/?#\s]+):(\d+)', l)
+                  return (m.group(1), int(m.group(2))) if m else (None, None)
+              except: return None, None
+
+          def check(l):
+              h, p = get_hp(l)
+              if not h: return None
+              try:
+                  s = time.time()
+                  with socket.create_connection((h, p), timeout=2.5):
+                      return (l, int((time.time()-s)*1000))
+              except: return None
+
           with open('raw_list.txt', 'r') as f:
               u = list(dict.fromkeys([line.strip() for line in f if line.strip()]))
+
+          with ThreadPoolExecutor(max_workers=100) as ex:
+              res = list(filter(None, ex.map(check, u)))
+          res.sort(key=lambda x: x[1])
 
           tg_channel = "https://t.me/whitelistGh0st"
           repo_url = "https://github.com"
           
           final = []
-          info_label = f"📢 TG: @whitelistGh0st | {len(u)} Configs"
+          info_label = f"📢 TG: @whitelistGh0st | {len(res)} Online"
           final.append(f"vless://ghost@127.0.0.1:443?encryption=none&security=none#{urllib.parse.quote(info_label)}")
 
-          for i, link in enumerate(u):
+          for i, (link, _) in enumerate(res):
               old_name = ""
               if link.startswith('vmess://'):
                   d = decode_vmess(link[8:])
@@ -74,13 +97,12 @@ jobs:
               f.write(f"# support-url: {tg_channel}\n")
               f.write(f"# profile-update-interval: 1\n")
               f.write(f"# subscription-userinfo: upload=0; download=0; total=854347202560000; expire=0\n")
-              f.write(f"# Всего конфигов: {len(final)-1}\n\n")
+              f.write(f"# Всего рабочих: {len(res)}\n\n")
               f.write('\n'.join(final))
 
           with open('status.json', 'w', encoding='utf-8') as f:
-              json.dump({"count": f"{len(final)-1} шт"}, f)
+              json.dump({"count": f"{len(res)} рабочих"}, f)
           EOF
-
 
       - name: Commit and Push
         run: |
