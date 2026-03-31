@@ -18,96 +18,22 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
       - name: Process Configs
         run: |
-          # 1. Сбор данных
-          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > raw_list.txt || true
-          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
-          curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> raw_list.txt || true
+          # 1. Сбор сырых данных из источников
+          curl -sL "https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/WHITE-CIDR-RU-all.txt" | tail -n +7 | grep -E "^(vless|ss|trojan|vmess)://" > list.txt || true
+          curl -sL "https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> list.txt || true
+          curl -sL "https://github.com/FLEXIY0/matryoshka-vpn/raw/main/configs/russia_whitelist.txt" | grep -E "^(vless|ss|trojan|vmess)://" >> list.txt || true
 
-          # 2. Python-скрипт (ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ)
-          python3 - <<EOF
-          import socket, re, base64, json, time, urllib.parse, os
-          from concurrent.futures import ThreadPoolExecutor
-
-          FLAGS_RE = re.compile(r'[\U0001F1E6-\U0001F1FF]{2}')
-
-          def decode_vmess(s):
-              try: return json.loads(base64.b64decode(s + '=' * (-len(s) % 4)).decode('utf-8'))
-              except: return None
-
-          def get_hp(l):
-              try:
-                  if l.startswith('vmess://'):
-                      d = decode_vmess(l[8:])
-                      return (d.get('add'), int(d.get('port'))) if d else (None, None)
-                  m = re.search(r'@([^:/?#\s]+):(\d+)', l)
-                  return (m.group(1), int(m.group(2))) if m else (None, None)
-              except: return None, None
-
-          def check(l):
-              h, p = get_hp(l)
-              if not h: return None
-              try:
-                  s = time.time()
-                  with socket.create_connection((h, p), timeout=2.5):
-                      return (l, int((time.time()-s)*1000))
-              except: return None
-
-          with open('raw_list.txt', 'r') as f:
-              u = list(dict.fromkeys([line.strip() for line in f if line.strip()]))
-
-          with ThreadPoolExecutor(max_workers=100) as ex:
-              res = list(filter(None, ex.map(check, u)))
-          res.sort(key=lambda x: x[1])
-
-          tg_channel = "https://t.me/whitelistGh0st"
-          repo_url = "https://github.com"
-          
-          final = []
-          info_label = f"📢 TG: @whitelistGh0st | {len(res)} Online"
-          final.append(f"vless://ghost@127.0.0.1:443?encryption=none&security=none#{urllib.parse.quote(info_label)}")
-
-          for i, (link, _) in enumerate(res):
-              old_name = ""
-              if link.startswith('vmess://'):
-                  d = decode_vmess(link[8:])
-                  if d: old_name = d.get('ps', '')
-              elif '#' in link:
-                  parts = link.split('#')
-                  old_name = urllib.parse.unquote(parts[1]) if len(parts) > 1 else ""
-              
-              f_flags = FLAGS_RE.findall(old_name)
-              icon = f_flags[0] if f_flags else "🌐"
-              new_ps = f"{icon} Gh0st_WhiteList #{i+1}"
-
-              if link.startswith('vmess://'):
-                  d = decode_vmess(link[8:])
-                  if d:
-                      d['ps'] = new_ps
-                      final.append("vmess://" + base64.b64encode(json.dumps(d).encode('utf-8')).decode('utf-8'))
-              else:
-                  clean_url = link.split('#')[0]
-                  final.append(f"{clean_url}#{urllib.parse.quote(new_ps)}")
-
-          with open('list.txt', 'w', encoding='utf-8') as f:
-              f.write(f"# profile-title: 🏳️ Gh0st_WhiteList 🏳️\n")
-              f.write(f"# profile-web-page: {repo_url}\n")
-              f.write(f"# support-url: {tg_channel}\n")
-              f.write(f"# profile-update-interval: 1\n")
-              f.write(f"# subscription-userinfo: upload=0; download=0; total=854347202560000; expire=0\n")
-              f.write(f"# Всего рабочих: {len(res)}\n\n")
-              f.write('\n'.join(final))
-
-          with open('status.json', 'w', encoding='utf-8') as f:
-              json.dump({"count": f"{len(res)} рабочих"}, f)
-          EOF
+      - name: Run Cleaner and Sorter
+        run: |
+          # Запуск твоего внешнего скрипта
+          python3 cleaner.py
 
       - name: Commit and Push
         run: |
           git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@://github.com"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add list.txt status.json
           git commit -m "Auto-update: $(date +'%d.%m %H:%M') | Total: $(grep -c '^[^#]' list.txt || echo 0)" || exit 0
           git push origin main
